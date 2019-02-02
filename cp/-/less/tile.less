@@ -1,0 +1,251 @@
+// head {
+@__nodeId__: ~"ss_components_products_cp__tile";
+// }
+
+.@{__nodeId__} {
+    display: flex;
+
+    > .appearance, > .options {
+        margin-right: 20px;
+
+        > .row {
+            padding: 5px 0;
+            display: flex;
+            align-items: flex-start;
+
+            > .label {
+                padding: 3px 0;
+                font-size: 11px;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            > .control {
+                display: flex;
+                margin-left: 5px;
+
+                input {
+                    margin-top: -2px;
+                    padding: 2px 5px;
+                    border: 1px solid #E0E0E0;
+                    border-radius: 3px;
+                    width: 100%;
+                    box-sizing: border-box;
+
+                    transition: border-color 0.3s;
+
+                    &:focus {
+                        border-color: #A0A0A0;
+                    }
+
+                    &.updating {
+                        border-color: #F9132C;
+                    }
+
+                    &.saved {
+                        border-color: #6BB75F;
+                    }
+                }
+
+                .toggle() {
+                    cursor: pointer;
+                    float: left;
+                    padding: 3px 8px;
+                    background-color: #E0E0E0;
+                    border-radius: 3px;
+
+                    &:hover {
+                        background-color: #D0D0D0;
+                    }
+
+                    &.enabled {
+                        background-color: #55AA55;
+                        color: #AAFFAA;
+
+                        &:hover {
+                            background-color: #4C934C;
+                        }
+                    }
+                }
+
+                .switcher() {
+                    display: flex;
+
+                    .button {
+                        cursor: pointer;
+                        padding: 3px 8px;
+                        background-color: #E0E0E0;
+
+                        &:first-child {
+                            border-radius: 3px 0 0 3px;
+                        }
+
+                        &:last-child {
+                            border-radius: 0 3px 3px 0;
+                        }
+
+                        &:hover {
+                            background-color: #D0D0D0;
+                        }
+
+                        &.selected {
+                            background-color: #444444;
+                            color: #FFF3D7;
+
+                            &:hover {
+                                background-color: #505050;
+                            }
+                        }
+                    }
+                }
+
+                .cartbutton_toggle {
+                    .toggle;
+                }
+
+                .quantify_toggle {
+                    .toggle;
+                }
+
+                .price_toggle {
+                    .toggle;
+                }
+
+                .price_rounding_toggle {
+                    .toggle;
+                }
+
+                .price_rounding_mode_switcher {
+                    .switcher;
+
+                    margin-left: 5px;
+                }
+
+                .zeroprice_label_toggle {
+                    .toggle;
+                }
+
+                .stock_display_toggle {
+                    .toggle;
+                }
+
+                .stock_info_mode_switcher {
+                    .switcher;
+
+                    margin-left: 5px;
+                }
+
+                .stock_rounding_toggle {
+                    .toggle;
+                }
+
+                .stock_rounding_mode_switcher {
+                    .switcher;
+
+                    margin-left: 5px;
+                }
+
+                .under_order_display_toggle {
+                    .toggle;
+                }
+
+                .under_order_info_mode_switcher {
+                    .switcher;
+
+                    margin-left: 5px;
+                }
+
+                .under_order_rounding_mode_switcher {
+                    .switcher;
+
+                    margin-left: 5px;
+                }
+
+                .sell_units_toggle {
+                    .toggle;
+
+                    background-color: #CFE7FF;
+                    color: #003377;
+
+                    &:hover {
+                        background-color: #C0D7ED;
+                    }
+
+                    &.enabled {
+                        background-color: #FFD3E8;
+                        color: #D0004B;
+
+                        &:hover {
+                            background-color: #E6BDD1;
+                        }
+                    }
+                }
+
+                .other_units_display_toggle {
+                    .toggle;
+
+                    background-color: #E0E0E0;
+
+                    &:hover {
+                        background-color: #D0D0D0;
+                    }
+
+                    &.enabled {
+                        background-color: #55AA55;
+                        color: #AAFFAA;
+
+                        &:hover {
+                            background-color: #4C934C;
+                        }
+                    }
+                }
+
+                &.image_size {
+                    display: flex;
+                    flex-direction: column;
+
+                    .inputs {
+                        display: flex;
+
+                        input {
+                            width: 52px;
+
+                            &.image_dimension[field='width'] {
+                                margin-right: 5px;
+                            }
+
+                        }
+                    }
+
+                    .image_resize_mode_switcher {
+                        .switcher;
+
+                        margin-top: 5px;
+                    }
+                }
+            }
+
+            &.l2 {
+
+                > .label {
+                    margin-left: 20px;
+                }
+
+                > .control {
+
+                }
+            }
+
+            &.l3 {
+
+                > .label {
+                    margin-left: 40px;
+                }
+
+                > .control {
+
+                }
+            }
+        }
+    }
+}

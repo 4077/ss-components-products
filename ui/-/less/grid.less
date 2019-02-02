@@ -1,0 +1,111 @@
+// head {
+@__nodeId__: ~"ss_components_products_ui__grid";
+// }
+
+.@{__nodeId__} {
+    position: relative;
+
+    > .name {
+        margin: 20px 10px;
+        font-size: 30px;
+        font-weight: bold;
+    }
+
+    > .description {
+        margin: 10px;
+        color: #909090;
+    }
+
+    > .tiles {
+        display: flex;
+        flex-wrap: wrap;
+
+        > .tile {
+            cursor: pointer;
+            position: relative;
+            margin: 10px;
+
+            display: flex;
+
+            > .cp {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 100%;
+
+                display: flex;
+                justify-content: space-between;
+
+                z-index: 1;
+
+                .l {
+
+                    .status {
+                        width: 16px;
+                        height: 16px;
+                        margin: 5px;
+                        font-size: 23px;
+                        margin: 5px 10px;
+
+                        &.initial {
+
+                            .icon {
+                                color: rgba(0, 0, 0, 0.5);
+                            }
+                        }
+
+                        &.moderation {
+
+                            .icon {
+                                color: rgba(0, 123, 212, 0.7);
+                            }
+                        }
+
+                        &.temporary {
+
+                            .icon {
+                                color: rgba(255, 0, 150, 0.68);
+                            }
+                        }
+
+                        &.discarded {
+
+                            .icon {
+                                color: rgba(255, 0, 0, 0.67);
+                            }
+                        }
+
+                        &.scheduled {
+
+                            .icon {
+                                color: rgba(28, 150, 0, 0.67);
+                            }
+                        }
+                    }
+                }
+
+                .r {
+                    display: flex;
+
+                    .not_published_mark {
+                        cursor: default;
+                        margin: 5px;
+                        font-size: 23px;
+                        color: #FF0000;
+                    }
+
+                    .button {
+                        cursor: pointer;
+                        margin: 5px;
+                        font-size: 23px;
+                        color: rgba(0, 0, 0, 0.25);
+
+                        &:hover {
+                            color: #4C4C4C;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

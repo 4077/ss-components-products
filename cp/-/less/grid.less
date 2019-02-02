@@ -1,0 +1,107 @@
+// head {
+@__nodeId__: ~"ss_components_products_cp__grid";
+// }
+
+.@{__nodeId__} {
+
+    .section() {
+        margin: 5px 0;
+
+        &:first-child {
+            margin: 0 0 5px;
+        }
+
+        &:last-child {
+            margin: 5px 0 0;
+        }
+
+        padding: 5px 10px;
+        border-radius: 5px;
+        background-color: #F9F9F9;
+        border: 1px solid #DADADA;
+    }
+
+    > .grid {
+        .section;
+
+        > .row {
+            padding: 5px 0;
+            display: flex;
+            align-items: center;
+
+            > .label {
+                padding: 5px 0;
+                font-size: 11px;
+                font-weight: bold;
+                white-space: nowrap;
+            }
+
+            > .control {
+                display: flex;
+                margin-left: 5px;
+
+                input {
+                    margin: -1px 0;
+                    padding: 2px 5px;
+                    border: 1px solid #E0E0E0;
+                    border-radius: 3px;
+                    box-sizing: border-box;
+
+                    transition: border-color 0.3s;
+
+                    &:focus {
+                        border-color: #A0A0A0;
+                    }
+
+                    &.updating {
+                        border-color: #F9132C;
+                    }
+
+                    &.saved {
+                        border-color: #6BB75F;
+                    }
+                }
+
+                .toggle() {
+                    cursor: pointer;
+                    float: left;
+                    padding: 3px 8px;
+                    background-color: #E0E0E0;
+                    border-radius: 3px;
+
+                    &:hover {
+                        background-color: #D0D0D0;
+                    }
+
+                    &.enabled {
+                        background-color: #55AA55;
+                        color: #AAFFAA;
+
+                        &:hover {
+                            background-color: #4C934C;
+                        }
+                    }
+                }
+
+                .toggle {
+                    .toggle;
+                }
+            }
+
+            &.l2 {
+
+                > .label {
+                    margin-left: 20px;
+                }
+
+                > .control {
+
+                }
+            }
+        }
+    }
+
+    > .tile {
+        .section;
+    }
+}
