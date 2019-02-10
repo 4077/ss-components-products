@@ -49,7 +49,39 @@ class Tile extends \Controller
         $stockRoundingEnabled = ap($stockInfo, 'common/rounding/enabled');
 
         $v->assign([
-                       'TEMPLATE_SELECTOR'                     => $this->templateSelectorView(),
+                       'NAME_PRIORITY_SWITCHER'                => $this->c('\std\ui\switcher~:view', [
+                           'path'    => $this->_p('>xhr:setNamePriority'),
+                           'data'    => [
+                               'pivot' => $pivotXPack,
+                           ],
+                           'value'   => ap($tileData, 'name_priority'),
+                           'class'   => 'name_priority_switcher',
+                           'classes' => [
+
+                           ],
+                           'buttons' => [
+                               [
+                                   'value' => 'full',
+                                   'label' => 'полное',
+                                   'class' => 'full'
+                               ],
+                               [
+                                   'value' => 'remote_full',
+                                   'label' => '(ориг.)',
+                                   'class' => 'remote_full'
+                               ],
+                               [
+                                   'value' => 'short',
+                                   'label' => 'короткое',
+                                   'class' => 'short'
+                               ],
+                               [
+                                   'value' => 'remote_short',
+                                   'label' => '(ориг.)',
+                                   'class' => 'remote_short'
+                               ]
+                           ]
+                       ]),
                        'CARTBUTTON_TOGGLE'                     => $this->c('\std\ui button:view', [
                            'path'    => '>xhr:toggleCartbutton',
                            'data'    => [
@@ -277,6 +309,7 @@ class Tile extends \Controller
                                ]
                            ]
                        ]),
+                       'TEMPLATE_SELECTOR'                     => $this->templateSelectorView(),
                        'IMAGE_WIDTH'                           => ap($tileData, 'image/width'),
                        'IMAGE_HEIGHT'                          => ap($tileData, 'image/height'),
                        'IMAGE_RESIZE_MODE'                     => ap($tileData, 'image/height'),

@@ -1,26 +1,13 @@
 <div class="{__NODE_ID__}" instance="{__INSTANCE__}">
 
-    <div class="appearance">
-        <div class="row">
-            <div class="label">Шаблон плитки</div>
-            <div class="control">
-                {TEMPLATE_SELECTOR}
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="label">Размер картинки</div>
-            <div class="control image_size">
-                <div class="inputs">
-                    <input type="text" class="image_dimension" field="width" value="{IMAGE_WIDTH}">
-                    <input type="text" class="image_dimension" field="height" value="{IMAGE_HEIGHT}">
-                </div>
-                {IMAGE_RESIZE_MODE_SWITCHER}
-            </div>
-        </div>
-    </div>
-
     <div class="options">
+        <div class="row">
+            <div class="label">Приоритет наименования</div>
+            <div class="control">
+                {NAME_PRIORITY_SWITCHER}
+            </div>
+        </div>
+
         <div class="row">
             <div class="label">Кнопка корзины</div>
             <div class="control">
@@ -221,4 +208,26 @@
 
     </div>
 
+    <div class="sep"></div>
+
+    <div class="appearance">
+        <div class="row">
+            <div class="label">Шаблон плитки</div>
+            <div class="control">
+                {TEMPLATE_SELECTOR}
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="label">Размер картинки</div>
+            <div class="control image_size">
+                <div class="inputs">
+                    <input type="text" class="image_dimension" field="width" value="{IMAGE_WIDTH}">
+                    <input type="text" class="image_dimension" field="height" value="{IMAGE_HEIGHT}">
+                </div>
+                {IMAGE_RESIZE_MODE_SWITCHER}
+            </div>
+        </div>
+    </div>
+    
 </div>

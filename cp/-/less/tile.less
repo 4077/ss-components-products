@@ -4,9 +4,21 @@
 
 .@{__nodeId__} {
     display: flex;
+    flex-direction: column;
+
+    > .sep {
+        margin: 10px -10px;
+        height: 1px;
+        background-color: #e8e8e8;
+    }
+
+    > .bottom_spacer {
+        height: 10px;
+    }
 
     > .appearance, > .options {
         margin-right: 20px;
+        margin: 5px 0;
 
         > .row {
             padding: 5px 0;
@@ -113,6 +125,10 @@
 
                 .price_rounding_toggle {
                     .toggle;
+                }
+
+                .name_priority_switcher {
+                    .switcher;
                 }
 
                 .price_rounding_mode_switcher {

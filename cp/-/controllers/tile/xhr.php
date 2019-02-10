@@ -23,6 +23,21 @@ class Xhr extends \Controller
         }
     }
 
+    //
+
+    public function setNamePriority()
+    {
+        if ($pivot = $this->unxpackModel('pivot')) {
+            $value = $this->data('value');
+
+            if (in($value, 'full, short, remote_full, remote_short')) {
+                ss()->cats->apComponentPivotData($pivot, 'tile/name_priority', $value);
+
+                $this->triggerUpdate($pivot->cat_id);
+            }
+        }
+    }
+
     public function toggleCartbutton()
     {
         if ($pivot = $this->unxpackModel('pivot')) {

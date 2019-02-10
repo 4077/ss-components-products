@@ -48,17 +48,19 @@ class Tile extends \Controller
 
             $cartKey = ss()->products->getCartKey($product);
 
+            $name = $this->renderProductName();
+
             $v->assign([
                            'CART_ITEM_KEY' => $cartKey,
                            'XPACK'         => xpack_model($product),
                            'CLASS'         => $this->data('class'),
-                           'NAME'          => $product->name
+                           'NAME'          => $name
                        ]);
 
             $this->assignCartCp($v);
             $this->assignProps($v);
             $this->assignImage($v);
-            $this->assignNameFontSize($v);
+            $this->assignNameFontSize($v, $name);
             $this->assignStockInfo($v);
             $this->assignUnderOrderInfo($v);
 
@@ -85,6 +87,31 @@ class Tile extends \Controller
         $this->css($css['path'] . '|' . $css['vmd5'])->setVars($css['vars']);
 
         return $v;
+    }
+
+    private function renderProductName()
+    {
+        $product = $this->product;
+
+        $namePriority = $this->data('name_priority');
+
+        if ($namePriority == 'full') {
+            $name = $product->name ?: $product->short_name ?: $product->remote_name ?: $product->remote_short_name;
+        }
+
+        if ($namePriority == 'short') {
+            $name = $product->short_name ?: $product->name ?: $product->remote_short_name ?: $product->remote_name;
+        }
+
+        if ($namePriority == 'remote_full') {
+            $name = $product->remote_name ?: $product->remote_short_name ?: $product->name ?: $product->short_name;
+        }
+
+        if ($namePriority == 'remote_short') {
+            $name = $product->remote_short_name ?: $product->remote_name ?: $product->short_name ?: $product->name;
+        }
+
+        return $name;
     }
 
     private function getCacheFilePath()
@@ -304,13 +331,13 @@ class Tile extends \Controller
         return $v;
     }
 
-    private function assignNameFontSize(\ewma\Views\View $v)
+    private function assignNameFontSize(\ewma\Views\View $v, $name)
     {
         $width = $this->data('image/width') ?: 225;
 
         $nameFontSize = 16;
 
-        if (strlen($this->product->name) > 50) {
+        if (strlen($name) > 50) {
             $nameFontSize = 15;
         }
 
