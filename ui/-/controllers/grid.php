@@ -93,8 +93,8 @@ class Grid extends \Controller
                 $stock = $productMultisourceSummary->stock;
                 $underOrder = $productMultisourceSummary->under_order;
 
-                $stockMinimum = $stockMinimumEnabled ? $stockMinimumValue : $product->unit_size;
-                $underOrderMinimum = $underOrderMinimumEnabled ? $underOrderMinimumValue : $product->unit_size;
+                $stockMinimum = $stockMinimumEnabled ? $stockMinimumValue : 0;
+                $underOrderMinimum = $underOrderMinimumEnabled ? $underOrderMinimumValue : 0;
 
                 $inStock = $stock >= $stockMinimum;
                 $inUnderOrder = $underOrder >= $underOrderMinimum;
