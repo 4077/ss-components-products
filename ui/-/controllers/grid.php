@@ -96,8 +96,8 @@ class Grid extends \Controller
                 $stockMinimum = $stockMinimumEnabled ? $stockMinimumValue : 0;
                 $underOrderMinimum = $underOrderMinimumEnabled ? $underOrderMinimumValue : 0;
 
-                $inStock = $stock >= $stockMinimum;
-                $inUnderOrder = $underOrder >= $underOrderMinimum;
+                $inStock = $stock > $stockMinimum;
+                $inUnderOrder = $underOrder > $underOrderMinimum;
 
                 $hiddenByStock = !$notInStockProductsDisplay && !$inStock;
                 $hiddenByUnderOrder = !$notInUnderOrderProductsDisplay && !$inUnderOrder;
