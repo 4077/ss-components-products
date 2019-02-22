@@ -13,8 +13,7 @@ class Xhr extends \Controller
     {
         if ($cat = \ss\models\Cat::find($this->data('cat_id'))) {
             $this->c('<:reload', [
-                'cat'         => $cat,
-                'multisource' => _j64($this->data('multisource'))
+                'cat' => $cat
             ], 'pivot');
         }
     }
@@ -26,18 +25,17 @@ class Xhr extends \Controller
 
         if ($cat && $product) {
             $this->c('tile:reload', [
-                'cat'         => $cat,
-                'product'     => $product,
-                'multisource' => _j64($this->data('multisource'))
+                'cat'     => $cat,
+                'product' => $product
             ], 'pivot');
 
             $this->c('product:reload', [
-                'cat'         => $cat,
-                'product'     => $product,
-                'multisource' => _j64($this->data('multisource'))
+                'cat'     => $cat,
+                'product' => $product
             ], 'pivot');
 
-            $this->widget('<:', 'bindTile', $product->id);
+            $this->widget('<:|' . $cat->id, 'resetQuantity', $product->id);
+            $this->widget('<:|' . $cat->id, 'bindTile', $product->id);
             $this->widget('<<carousel:', 'bindProduct', $product->id);
         }
     }
@@ -67,60 +65,19 @@ class Xhr extends \Controller
 
     public function addToCart()
     {
-        $product = $this->unxpackModel('product');
-        $cartInstance = $this->getCartInstance();
+        $data = _j64($this->data('data'));
 
-        if ($product && null !== $cartInstance) {
-            if ($cat = $product->cat) {
-                $multisource = _j64($this->data('multisource'));
+        if ($product = unpack_model($data['product'])) {
+            $cart = cart($data['cart_instance']);
 
-                $component = \ewma\components\models\Component::find(58); // hardcode
-
-                $pivot = ss()->cats->getComponentPivot($cat, $component);
-
-                /**
-                 * @var $cTileApp \ss\components\products\ui\controllers\tile\App
-                 */
-                $cTileApp = $this->c('tile/app');
-
-                $tileData = $cTileApp->renderTileData($product, $pivot, true, $multisource);
-
-                cart($cartInstance)->add(ss()->products->getCartKey($product), [
-                    'name'  => $product->name,
-                    'price' => $tileData['price'],
-                    'model' => pack_model($product)
-                ]);
+            $quantity = $this->data('quantity');
+            if ($quantity != $cart->stage->getQuantity($product)) {
+                $cart->stage->setQuantity($product, $quantity);
             }
+
+            $cart->add($product, map($data, 'pivot, name, price, price_without_discount, discount, units, price_display'));
         }
     }
-
-//    public function addToCart()
-//    {
-//        $product = $this->unxpackModel('product');
-//        $cartInstance = $this->getCartInstance();
-//
-//        if ($product && null !== $cartInstance) {
-//            $sellByAltUnits = false;
-//
-//            if ($cat = $product->cat and $pivot = ss()->cats->getFirstEnabledComponentPivot($cat)) { // todo проверить что будет если компонент сетки не первый
-//                $pivotData = _j($pivot->data);
-//
-//                $sellByAltUnits = ap($pivotData, 'tile/sell_by_alt_units');
-//            }
-//
-//            if ($sellByAltUnits) {
-//                $priceField = 'alt_price';
-//            } else {
-//                $priceField = 'price';
-//            }
-//
-//            cart($cartInstance)->add(ss()->products->getCartKey($product), [
-//                'name'  => $product->name,
-//                'price' => $product->{$priceField},
-//                'model' => pack_model($product)
-//            ]);
-//        }
-//    }
 
     public function decQuantity()
     {
@@ -128,7 +85,7 @@ class Xhr extends \Controller
         $cartInstance = $this->getCartInstance();
 
         if ($product && null !== $cartInstance) {
-            cart($cartInstance)->stage->decQuantity(ss()->products->getCartKey($product));
+            cart($cartInstance)->stage->decQuantity($product);
         }
     }
 
@@ -138,7 +95,7 @@ class Xhr extends \Controller
         $cartInstance = $this->getCartInstance();
 
         if ($product && null !== $cartInstance) {
-            cart($cartInstance)->stage->incQuantity(ss()->products->getCartKey($product));
+            cart($cartInstance)->stage->incQuantity($product);
         }
     }
 
@@ -148,7 +105,7 @@ class Xhr extends \Controller
         $cartInstance = $this->getCartInstance();
 
         if ($product && null !== $cartInstance) {
-            cart($cartInstance)->stage->setQuantity(ss()->products->getCartKey($product), $this->data('value'));
+            cart($cartInstance)->stage->setQuantity($product, $this->data('value'));
         }
     }
 

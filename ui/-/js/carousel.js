@@ -97,7 +97,7 @@ var __nodeNs__ = "ss_components_products_ui";
             });
 
             if (o.openProductId) {
-                $(".tile[product_id='" + o.openProductId + "']").click();
+                $(".tile[item_id='" + o.openProductId + "']").click();
             }
 
             w._bindProducts();
@@ -122,56 +122,123 @@ var __nodeNs__ = "ss_components_products_ui";
             var $w = w.element;
 
             //
+            // tmp {
+            //
+            // https://ru.stackoverflow.com/a/743917
+            var number_format = function (number, decimals = 0, dec_point = '.', thousands_sep = ' ') {
+                var sign = number < 0 ? '-' : '';
+
+                var s_number = Math.abs(parseInt(number = (+number || 0).toFixed(decimals))) + "";
+                var len = s_number.length;
+                var tchunk = len > 3 ? len % 3 : 0;
+
+                var ch_first = (tchunk ? s_number.substr(0, tchunk) + thousands_sep : '');
+                var ch_rest = s_number.substr(tchunk).replace(/(\d\d\d)(?=\d)/g, '$1' + thousands_sep);
+                var ch_last = decimals ?
+                    dec_point + (Math.abs(number) - s_number)
+                        .toFixed(decimals)
+                        .slice(2) :
+                    '';
+
+                return sign + ch_first + ch_rest + ch_last;
+            };
+            //
+            // }
+
+//
             // quantify
             //
 
             var $quantify = $(".quantify", $tile);
             var $input = $("input", $quantify);
+            var $totalCost = $(".total_cost > .value > span", $tile);
 
             $(".dec.button", $quantify).rebind("click", function (e) {
-                delta('decQuantity');
+                var productId = $tile.attr("item_id");
+
+                if (o.products[productId]['quantity'] > 1) {
+                    deltaQuantity(-1, $tile);
+                }
 
                 e.stopPropagation();
             });
 
             $(".inc.button", $quantify).rebind("click", function (e) {
-                delta('incQuantity');
+                deltaQuantity(1, $tile);
 
                 e.stopPropagation();
+            });
+
+            $input.rebind("keyup", function (e) {
+                var productId = $tile.attr("product_id");
+
+                var value = $input.val();
+
+                if (value === '') {
+                    updateQuantity(productId, 0);
+                } else {
+                    if (parseInt(value) === parseInt(value)) {
+                        updateQuantity(productId, parseInt(value));
+                    } else {
+                        $input.val(o.products[productId]['quantity']);
+                    }
+                }
             });
 
             $input.rebind("click", function (e) {
                 e.stopPropagation();
             });
 
-            $input.rebind("keyup", function (e) {
-                if (e.which === 13) {
-                    setQuantity();
-                }
-            });
+            function deltaQuantity(delta, $tile) {
+                var productId = $tile.attr("product_id");
 
-            $input.rebind("blur", function () {
-                setQuantity();
-            });
+                updateQuantity(productId, o.products[productId]['quantity'] + delta);
+            }
 
             var updateTimeout = 0;
 
-            function setQuantity() {
+            function updateQuantity(productId, quantity) {
+                if (quantity < 0) {
+                    quantity = 0;
+                }
+
+                o.products[productId]['quantity'] = quantity;
+
+                var price = o.products[productId]['price'];
+                var totalCost = price * quantity;
+
+                $input.val(quantity);
+
+                var priceRounding = o.products[productId]['priceRounding'];
+
+                if (priceRounding.enabled) {
+                    if (priceRounding.mode === 'floor') {
+                        totalCost = Math.floor(totalCost);
+                    }
+
+                    if (priceRounding.mode === 'round') {
+                        totalCost = Math.round(totalCost);
+                    }
+
+                    if (priceRounding.mode === 'ceil') {
+                        totalCost = Math.ceil(totalCost);
+                    }
+
+                    totalCost = number_format(totalCost)
+                } else {
+                    totalCost = number_format(totalCost, 2);
+                }
+
+                $totalCost.html(totalCost);
+
                 clearTimeout(updateTimeout);
                 updateTimeout = setTimeout(function () {
-                    w.r('setQuantity', {
-                        product: $quantify.closest("[xpack]").attr("xpack"),
-                        cart:    $quantify.closest("[cart]").attr("cart"),
-                        value:   $input.val()
+                    w.mr('setQuantity', {
+                        product: $tile.find("[xpack]").attr("xpack"),
+                        cart:    o.cart,
+                        value:   quantity
                     });
                 }, 200);
-            }
-
-            function delta(path) {
-                w.r(path, {
-                    product: $quantify.closest("[xpack]").attr("xpack"),
-                    cart:    $quantify.closest("[cart]").attr("cart")
-                })
             }
 
             //
@@ -181,9 +248,11 @@ var __nodeNs__ = "ss_components_products_ui";
             var $cartbutton = $(".add_to_cart_button", $tile);
 
             $cartbutton.rebind("click", function (e) {
+                var productId = $tile.attr("product_id");
+
                 w.r('addToCart', {
-                    product: $cartbutton.closest("[xpack]").attr("xpack"),
-                    cart:    $cartbutton.closest("[cart]").attr("cart")
+                    data:     $(this).attr("data"),
+                    quantity: o.products[productId]['quantity']
                 });
 
                 e.stopPropagation();

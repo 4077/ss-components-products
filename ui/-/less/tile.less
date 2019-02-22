@@ -1,4 +1,6 @@
 // head {
+@import "../../../../../modules-vendor/fed/css/std/-/less/main.less";
+
 @__nodeId__: ~"ss_components_products_ui__tile";
 // }
 
@@ -169,6 +171,51 @@
             font-family: PTSansBold;
         }
 
+        .price_without_discount {
+            margin: 5px 0 3px;
+
+            display: flex;
+            align-items: center;
+
+            .value {
+                font-size: 17px;
+                text-decoration: line-through;
+                font-weight: bold;
+                color: #cc0000;
+                text-align: center;
+                font-family: PTSansBold;
+            }
+
+            .tag {
+                margin-left: 10px;
+                position: relative;
+
+                .icon {
+                    //margin-top: -50%;
+                    margin: -16px 0;
+                    font-size: 42px;
+                    color: #cc0000;
+                    transform: rotate(-45deg);
+                }
+
+                .overlay {
+                    position: absolute;
+                    top: 0;
+                    width: 10px;
+                    height: 10px;
+                    background-color: #cc0000;
+                }
+
+                .label {
+                    position: absolute;
+                    color: #ffffff;
+                    margin-top: -15px;
+                    margin-left: 2px;
+                    font-size: 13px;
+                }
+            }
+        }
+
         .zeroprice_label {
             margin: 5px;
             font-size: 17px;
@@ -188,45 +235,24 @@
             font-family: PTSansBold;
         }
 
-        .stock_info {
-            margin: 5px;
+        .stock {
 
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
 
-            > .content {
+            > .group {
+                margin: 2px;
                 padding: 2px 5px;
                 background-color: #FFFFFF;
                 border-radius: 3px;
-            }
 
-            &.in_stock {
-
-                > .content {
+                &.in_stock {
                     background-color: #F8FFF9;
                     color: #2FA22E;
                 }
-            }
 
-            &.not_in_stock {
-
-                > .content {
-                    background-color: #FFBFBF;
-                    color: #842525;
-                }
-            }
-
-            &.in_under_order {
-
-                > .content {
-                    background-color: #c9f3ff;
-                    color: #366CA2;
-                }
-            }
-
-            &.not_in_under_order {
-
-                > .content {
+                &.not_in_stock {
                     background-color: #FFBFBF;
                     color: #842525;
                 }
@@ -236,11 +262,11 @@
         .quantify {
             .quantify;
 
-            margin-top: 8px;
+            margin: 5px;
         }
 
         .total_cost {
-            margin: 10px 10px 10px;
+            margin: 5px;
             display: flex;
             justify-content: center;
 
@@ -262,6 +288,7 @@
         .add_to_cart_button_container {
             position: relative;
             width: 100%;
+            margin-top: 5px;
 
             .add_to_cart_button {
                 cursor: pointer;
@@ -292,7 +319,7 @@
                 }
             }
 
-            .items_count {
+            .products_count {
                 position: absolute;
                 right: 6px;
                 top: -5px;

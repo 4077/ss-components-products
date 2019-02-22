@@ -14,15 +14,39 @@ class Carousel extends \Controller
         $this->n++;
     }
 
+    /**
+     * @var \ss\components\products\Tile[]
+     */
+    private $tiles = [];
+
+    public function addTile(\ss\components\products\Tile $tile)
+    {
+        $this->tiles[] = $tile;
+        $this->n++;
+    }
+
     public function render($data = [])
     {
         $v = $this->v('|');
 
-        foreach ($this->products as $productId => $product) {
+        $productsWidgetData = [];
+
+        foreach ($this->tiles as $tile) {
+            $product = $tile->product;
+
             $v->assign('item', [
-                'PRODUCT_ID' => $productId,
-                'CONTENT'    => $product->render()
+                'PRODUCT_ID' => $product->id,
+                'CONTENT'    => $this->c('product:view', [
+                    'product' => $tile->product,
+                    'pivot'   => $tile->pivot
+                ])
             ]);
+
+            $productsWidgetData[$product->id] = [
+                'price'         => $tile->price,
+                'quantity'      => $tile->stageQuantity,
+                'priceRounding' => $tile->data('price/rounding')
+            ];
         }
 
         $this->css();
@@ -45,9 +69,6 @@ class Carousel extends \Controller
         ]);
 
         $this->widget(':|', [
-            '.payload'      => [
-                'multisource' => j64_($this->data('multisource'))
-            ],
             '.r'            => [
                 'incQuantity'  => $this->_p('grid/xhr:incQuantity'),
                 'decQuantity'  => $this->_p('grid/xhr:decQuantity'),
@@ -56,6 +77,7 @@ class Carousel extends \Controller
                 'productSlide' => $this->_p('grid/xhr:productSlide'),
                 'close'        => $this->_p('grid/xhr:close'),
             ],
+            'products'      => $productsWidgetData,
             'route'         => $data['back_route'] ?? $this->data['cat']->route_cache ?? '',
             'openProductId' => $this->data('product_id')
         ]);

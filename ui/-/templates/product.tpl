@@ -1,4 +1,4 @@
-<div class="{__NODE_ID__}" vmd5="{VMD5}" instance="{__INSTANCE__}" xpack="{XPACK}" cart="{CART_INSTANCE}">
+<div class="{__NODE_ID__}" vmd5="{VMD5}" instance="{__INSTANCE__}" xpack="{XPACK}" product_id="{PRODUCT_ID}">
 
     <div class="left section">
         <div class="image">{IMAGE}</div>
@@ -17,43 +17,48 @@
         </div>
 
         <div class="bottom">
-            <!-- alt_price -->
+            {*<!-- alt_price -->
             <div class="alt_price">
                 {VALUE} руб.<!-- alt_price/units -->/{CONTENT}<!-- / -->
+            </div>
+            <!-- / -->*}
+
+            <!-- price_without_discount -->
+            <div class="price_without_discount">
+                <div class="value">
+                    {VALUE} руб.<!-- price_without_discount/units -->{* ps reformat bug *}/{CONTENT}<!-- / -->
+                </div>
+                <div class="tag">
+                    <div class="icon fa fa-tag"></div>
+                    <div class="overlay"></div>
+                    <div class="label">-{DISCOUNT}%</div>
+                </div>
             </div>
             <!-- / -->
 
             <!-- price -->
             <div class="price">
-                {VALUE} руб.<!-- price/units -->/{CONTENT}<!-- / -->
+                {VALUE} руб.<!-- price/units -->{* ps reformat bug *}/{CONTENT}<!-- / -->
             </div>
             <!-- / -->
 
-            <!-- stock_info -->
-            <div class="stock_info {MODE} {STOCK_CLASS}">
-                <div class="content">
-                    <!-- stock_info/value -->
-                    <span class="label">{LABEL}</span>
-                    <span class="value">{VALUE}<!-- stock_info/value/units --> {CONTENT}<!-- / --></span>
-                    <!-- / -->
-                    <!-- stock_info/label -->
-                    <span class="label">{CONTENT}</span>
-                    <!-- / -->
-                </div>
-            </div>
+            <!-- zeroprice_label -->
+            <div class="zeroprice_label">{VALUE}</div>
             <!-- / -->
 
-            <!-- under_order_info -->
-            <div class="stock_info {MODE} {STOCK_CLASS}">
-                <div class="content">
-                    <!-- under_order_info/value -->
+            <!-- stock -->
+            <div class="stock">
+                <!-- stock/group -->
+                <div class="group {MODE} {TYPE} {CLASS}">
+                    <!-- stock/group/value -->
                     <span class="label">{LABEL}</span>
-                    <span class="value">{VALUE}<!-- under_order_info/value/units --> {CONTENT}<!-- / --></span>
+                    <span class="value">{VALUE}{UNITS}</span>
                     <!-- / -->
-                    <!-- under_order_info/label -->
+                    <!-- stock/group/label -->
                     <span class="label">{CONTENT}</span>
                     <!-- / -->
                 </div>
+                <!-- / -->
             </div>
             <!-- / -->
 
@@ -73,17 +78,17 @@
             <!-- quantify/total_cost -->
             <div class="total_cost">
                 <div class="label">Итого:</div>
-                <div class="value">{VALUE} руб.</div>
+                <div class="value"><span>{VALUE}</span> руб.</div>
             </div>
             <!-- / -->
             <!-- / -->
 
             <!-- cartbutton -->
             <div class="add_to_cart_button_container">
-                <div class="add_to_cart_button {IN_CART_CLASS}">{LABEL}</div>
-                <!-- cartbutton/items_count -->
-                <div class="items_count">
-                    {ITEMS_COUNT}
+                <div class="add_to_cart_button {IN_CART_CLASS}" data="{DATA}">{LABEL}</div>
+                <!-- cartbutton/products_count -->
+                <div class="products_count">
+                    {PRODUCTS_COUNT}
                 </div>
                 <!-- / -->
             </div>

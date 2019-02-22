@@ -23,9 +23,9 @@
 
         <div class="add_to_cart_button_container">
             {ADD_TO_CART_BUTTON}
-            <!-- items_count -->
-            <div class="items_count">
-                {ITEMS_COUNT}
+            <!-- products_count -->
+            <div class="products_count">
+                {PRODUCTS_COUNT}
             </div>
             <!-- / -->
         </div>

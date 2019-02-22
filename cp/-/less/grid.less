@@ -24,7 +24,7 @@
     > .grid {
         .section;
 
-        > .row {
+        > .row, .group_row > .row {
             padding: 5px 0;
             display: flex;
             align-items: center;
@@ -66,6 +66,7 @@
                     cursor: pointer;
                     float: left;
                     padding: 3px 8px;
+                    margin-right: 5px;
                     background-color: #E0E0E0;
                     border-radius: 3px;
 
@@ -86,12 +87,58 @@
                 .toggle {
                     .toggle;
                 }
+
+                .switcher() {
+                    display: flex;
+
+                    .button {
+                        cursor: pointer;
+                        padding: 3px 8px;
+                        background-color: #E0E0E0;
+
+                        &:first-child {
+                            border-radius: 3px 0 0 3px;
+                        }
+
+                        &:last-child {
+                            border-radius: 0 3px 3px 0;
+                        }
+
+                        &:hover {
+                            background-color: #D0D0D0;
+                        }
+
+                        &.selected {
+                            background-color: #444444;
+                            color: #FFF3D7;
+
+                            &:hover {
+                                background-color: #505050;
+                            }
+                        }
+                    }
+                }
+
+                .switcher {
+                    .switcher;
+                }
             }
 
             &.l2 {
 
                 > .label {
                     margin-left: 20px;
+                }
+
+                > .control {
+
+                }
+            }
+
+            &.l3 {
+
+                > .label {
+                    margin-left: 40px;
                 }
 
                 > .control {

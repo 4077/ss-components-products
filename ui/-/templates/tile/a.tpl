@@ -54,9 +54,9 @@
         <!-- cartbutton -->
         <div class="add_to_cart_button_container">
             {BUTTON}
-            <!-- cartbutton/items_count -->
-            <div class="items_count">
-                {ITEMS_COUNT}
+            <!-- cartbutton/products_count -->
+            <div class="products_count">
+                {PRODUCTS_COUNT}
             </div>
             <!-- / -->
         </div>

@@ -11,118 +11,26 @@ var __nodeNs__ = "ss_components_products_cp";
             var w = this;
             var $w = w.element;
 
-            $("input.cartbutton_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
+            var updateStringValue = function ($input) {
+                w.r('updateStringValue', {
+                    path:  $input.attr("path"),
+                    value: $input.val()
+                });
+            };
 
-                    w.r('updateCartbuttonLabel', {value: value});
-                }
+            $("input[path]", $w).rebind("blur cut paste", function () {
+                updateStringValue($(this));
             });
 
-            //
-
-            $("input.zeroprice_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateZeropriceLabel', {value: value});
-                }
-            });
-
-            //
-
-            $("input.in_stock_info_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateInStockInfoLabel', {value: value});
-                }
-            });
-
-            $("input.not_in_stock_info_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateNotInStockInfoLabel', {value: value});
-                }
-            });
-
-            $("input.stock_value_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateStockValueLabel', {value: value});
-                }
-            });
-
-            //
-
-            $("input.in_under_order_info_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateInUnderOrderInfoLabel', {value: value});
-                }
-            });
-
-            $("input.not_in_under_order_info_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateNotInUnderOrderInfoLabel', {value: value});
-                }
-            });
-
-            $("input.under_order_value_label", $w).rebind("blur keyup", function (e) {
-                if (e.type === 'blur' || e.which === 13) {
-                    var value = $(this).val();
-
-                    w.r('updateUnderOrderValueLabel', {value: value});
-                }
-            });
-
-            //
-
-            $("input.image_dimension[field]", $w).rebind("blur cut paste", function (e) {
-                if (e.which !== 9) {
-                    updateImageDimension($(this));
-                }
-            });
-
-            $("input.image_dimension[field]", $w).rebind("keyup", function (e) {
+            $("input[path]", $w).rebind("keyup", function (e) {
                 if (e.which === 13) {
-                    var field = $(this).attr("field");
-                    var value = $(this).val();
-
-                    w.r('updateImageDimension', {
-                        field: field,
-                        value: value
-                    });
-
-                    $(this).addClass("updating");
+                    updateStringValue($(this));
                 }
             });
-
-            var updateTimeout;
-
-            function updateImageDimension($field) {
-                var field = $field.attr("field");
-                var value = $field.val();
-
-                clearTimeout(updateTimeout);
-                updateTimeout = setTimeout(function () {
-                    w.r('updateImageDimension', {
-                        field: field,
-                        value: value
-                    });
-
-                    $field.addClass("updating");
-                }, 400);
-            }
         },
 
-        savedHighlight: function (field) {
-            var $field = $("input[field='" + field + "']", this.element);
+        savedHighlight: function (path) {
+            var $field = $("input[path='" + path + "']", this.element);
 
             $field.removeClass("updating").addClass("saved");
 

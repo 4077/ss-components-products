@@ -1,12 +1,17 @@
 <div class="{__NODE_ID__}" instance="{__INSTANCE__}">
 
     <div class="options">
+
+        {* name *}
+
         <div class="row">
             <div class="label">Приоритет наименования</div>
             <div class="control">
                 {NAME_PRIORITY_SWITCHER}
             </div>
         </div>
+
+        {* cart *}
 
         <div class="row">
             <div class="label">Кнопка корзины</div>
@@ -15,11 +20,11 @@
             </div>
         </div>
 
-        <!-- if cartbutton_enabled -->
+        <!-- cartbutton -->
         <div class="row l2">
             <div class="label">Надпись</div>
             <div class="control">
-                <input type="text" class="cartbutton_label" field="cartbutton_label" value="{CARTBUTTON_LABEL}">
+                {LABEL_INPUT}
             </div>
         </div>
 
@@ -31,6 +36,8 @@
         </div>
         <!-- / -->
 
+        {* price *}
+
         <div class="row">
             <div class="label">Показывать цену</div>
             <div class="control">
@@ -38,33 +45,42 @@
             </div>
         </div>
 
-        <!-- if price_display -->
-        <div class="row l2">
-            <div class="label">Округление</div>
-            <div class="control">
-                {PRICE_ROUNDING_TOGGLE}
-                <!-- if price_rounding_enabled -->
-                {PRICE_ROUNDING_MODE_SWITCHER}
-                <!-- / -->
+        <!-- price -->
+        <div class="row_group">
+            <div class="row l2">
+                <div class="label">Округление</div>
+                <div class="control">
+                    {ROUNDING_TOGGLE}
+                    {ROUNDING_MODE_SWITCHER}
+                </div>
             </div>
-        </div>
 
-        <div class="row l2">
-            <div class="label">Надпись вместо нулевой цены</div>
-            <div class="control">
-                {ZEROPRICE_LABEL_TOGGLE}
+            <div class="row l2">
+                <div class="label">Надпись вместо нулевой цены</div>
+                <div class="control">
+                    {ZEROPRICE_LABEL_TOGGLE}
+                </div>
             </div>
-        </div>
 
-        <!-- if zeroprice_label -->
-        <div class="row l3">
-            <div class="label">Надпись</div>
-            <div class="control">
-                <input type="text" class="zeroprice_label" field="zeroprice_label" value="{ZEROPRICE_LABEL_VALUE}">
+            <!-- price/zeroprice_label -->
+            <div class="row l3">
+                <div class="label">Надпись</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+            <!-- / -->
+
+            <div class="row l2">
+                <div class="label">Показывать скидку</div>
+                <div class="control">
+                    {DISCOUNT_TOGGLE}
+                </div>
             </div>
         </div>
         <!-- / -->
-        <!-- / -->
+
+        {* units *}
 
         <div class="row">
             <div class="label">Единицы продажи</div>
@@ -73,138 +89,246 @@
             </div>
         </div>
 
-        <div class="row">
+        <div class="row l2">
+            <div class="label">Приоритет единицам</div>
+            <div class="control">
+                {TRY_FORCE_UNITS_TOGGLE}
+            </div>
+        </div>
+
+        <!-- try_force_units -->
+        <div class="row l3">
+            <div class="label">Список</div>
+            <div class="control">
+                {LIST_INPUT}
+            </div>
+        </div>
+        <!-- / -->
+
+        {*<div class="row">
             <div class="label">Показывать другие единицы</div>
             <div class="control">
                 {OTHER_UNITS_DISPLAY_TOGGLE}
             </div>
-        </div>
+        </div>*}
 
-        <div class="row">
+        {* stock info *}
+
+        <div class="row stock_info">
             <div class="label">Информация о наличии</div>
+            <div class="control">
+                {STOCK_TOGGLE}
+            </div>
+            {*<!-- if stock -->*}
+            {*<div class="add_group_control">*}
+                {*<div class="button">*}
+                    {*<div class="icon fa fa-plus"></div>*}
+                {*</div>*}
+                {*<div class="selector">*}
+                    {*{STOCK_WAREHOUSE_GROUP_SELECTOR}*}
+                {*</div>*}
+            {*</div>*}
+            {*<!-- / -->*}
         </div>
 
-        {*
-
-            stock
-
-        *}
-
-        <div class="row l2">
-            <div class="label">Если есть в наличии</div>
-            <div class="control">
-                {IN_STOCK_DISPLAY_TOGGLE}
-                <!-- if in_stock_info_enabled -->
-                {IN_STOCK_INFO_MODE_SWITCHER}
-                <!-- / -->
+        <!-- stock -->
+        <div class="row_group">
+            <div class="row l2">
+                <div class="label">Округление</div>
+                <div class="control">
+                    {ROUNDING_TOGGLE}
+                    {ROUNDING_MODE_SWITCHER}
+                </div>
             </div>
-        </div>
 
-        <!-- if in_stock_label_control -->
-        <div class="row l3">
-            <div class="label">Надпись</div>
-            <div class="control">
-                <input type="text" class="in_stock_info_label" field="in_stock_info_label" value="{IN_STOCK_INFO_LABEL}">
+            {*
+
+                selected group
+
+            *}
+
+            <div class="row l2 warehouse_group">
+                <div class="label">Для выбранной группы/для всех, если не выбрана</div>
             </div>
+
+            <div class="row l3">
+                <div class="label">Если есть в наличии</div>
+                <div class="control">
+                    {SELECTED_GROUP_IN_STOCK_DISPLAY_TOGGLE}
+                    {SELECTED_GROUP_IN_STOCK_MODE_SWITCHER}
+                </div>
+            </div>
+
+            <!-- stock/selected_group_in_stock_label -->
+            <div class="row l4">
+                <div class="label">Надпись</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+            <!-- / -->
+
+            <div class="row l3">
+                <div class="label">Если нет в наличии</div>
+                <div class="control">
+                    {SELECTED_GROUP_NOT_IN_STOCK_DISPLAY_TOGGLE}
+                    {SELECTED_GROUP_NOT_IN_STOCK_MODE_SWITCHER}
+                </div>
+            </div>
+
+            <!-- stock/selected_group_not_in_stock_label -->
+            <div class="row l4">
+                <div class="label">Надпись</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+            <!-- / -->
+
+            <!-- stock/selected_group_value_label -->
+            <div class="row l3">
+                <div class="label">Надпись перед значением</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+
+            <div class="row l4">
+                <div class="label">Использовать имя группы если выбрана</div>
+                <div class="control">
+                    {GROUP_NAME_IF_POSSIBLE_TOGGLE}
+                </div>
+            </div>
+
+            {*<!-- stock/selected_group_value_label/label -->*}
+            {*<div class="row l4">*}
+                {*<div class="label">Надпись</div>*}
+                {*<div class="control">*}
+                    {*{LABEL_INPUT}*}
+                {*</div>*}
+            {*</div>*}
+            {*<!-- / -->*}
+            <!-- / -->
+
+            {*
+
+                other groups
+
+            *}
+
+            <div class="row l2 warehouse_group">
+                <div class="label">Для остальных групп</div>
+            </div>
+
+            <div class="row l3">
+                <div class="label">Если есть в наличии</div>
+                <div class="control">
+                    {OTHER_GROUPS_IN_STOCK_DISPLAY_TOGGLE}
+                    {OTHER_GROUPS_IN_STOCK_MODE_SWITCHER}
+                </div>
+            </div>
+
+            <!-- stock/other_groups_in_stock_label -->
+            <div class="row l4">
+                <div class="label">Надпись</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+            <!-- / -->
+
+            <div class="row l3">
+                <div class="label">Если нет в наличии</div>
+                <div class="control">
+                    {OTHER_GROUPS_NOT_IN_STOCK_DISPLAY_TOGGLE}
+                    {OTHER_GROUPS_NOT_IN_STOCK_MODE_SWITCHER}
+                </div>
+            </div>
+
+            <!-- stock/other_groups_not_in_stock_label -->
+            <div class="row l4">
+                <div class="label">Надпись</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+            <!-- / -->
+
+            <!-- stock/other_groups_value_label -->
+            <div class="row l3">
+                <div class="label">Надпись перед значением</div>
+                <div class="control">
+                    {LABEL_INPUT}
+                </div>
+            </div>
+
+            <div class="row l4">
+                <div class="label">Использовать имя группы если товар в наличии только в ней</div>
+                <div class="control">
+                    {GROUP_NAME_IF_POSSIBLE_TOGGLE}
+                </div>
+            </div>
+            <!-- / -->
+
+            {*
+
+                assigned groups
+
+            *}
+
+            {*<!-- stock/warehouse_group -->*}
+            {*<div class="row_group">*}
+                {*<div class="row l2 warehouse_group">*}
+                    {*<div class="label">{GROUP_NAME}</div>*}
+                    {*{DISABLE_BUTTON}*}
+                {*</div>*}
+
+                {*<div class="row l3">*}
+                    {*<div class="label">Если есть в наличии</div>*}
+                    {*<div class="control">*}
+                        {*{IN_STOCK_DISPLAY_TOGGLE}*}
+                        {*{IN_STOCK_MODE_SWITCHER}*}
+                    {*</div>*}
+                {*</div>*}
+
+                {*<!-- stock/warehouse_group/in_stock_label -->*}
+                {*<div class="row l4">*}
+                    {*<div class="label">Надпись</div>*}
+                    {*<div class="control">*}
+                        {*{LABEL_INPUT}*}
+                    {*</div>*}
+                {*</div>*}
+                {*<!-- / -->*}
+
+                {*<div class="row l3">*}
+                    {*<div class="label">Если нет в наличии</div>*}
+                    {*<div class="control">*}
+                        {*{NOT_IN_STOCK_DISPLAY_TOGGLE}*}
+                        {*{NOT_IN_STOCK_MODE_SWITCHER}*}
+                    {*</div>*}
+                {*</div>*}
+
+                {*<!-- stock/warehouse_group/not_in_stock_label -->*}
+                {*<div class="row l4">*}
+                    {*<div class="label">Надпись</div>*}
+                    {*<div class="control">*}
+                        {*{LABEL_INPUT}*}
+                    {*</div>*}
+                {*</div>*}
+                {*<!-- / -->*}
+
+                {*<!-- stock/warehouse_group/value_label -->*}
+                {*<div class="row l3">*}
+                    {*<div class="label">Надпись перед значением</div>*}
+                    {*<div class="control">*}
+                        {*{LABEL_INPUT}*}
+                    {*</div>*}
+                {*</div>*}
+                {*<!-- / -->*}
+            {*</div>*}
+            {*<!-- / -->*}
         </div>
         <!-- / -->
-
-        <div class="row l2">
-            <div class="label">Если нет в наличии</div>
-            <div class="control">
-                {NOT_IN_STOCK_DISPLAY_TOGGLE}
-                <!-- if not_in_stock_info_enabled -->
-                {NOT_IN_STOCK_INFO_MODE_SWITCHER}
-                <!-- / -->
-            </div>
-        </div>
-
-        <!-- if not_in_stock_label_control -->
-        <div class="row l3">
-            <div class="label">Надпись</div>
-            <div class="control">
-                <input type="text" class="not_in_stock_info_label" field="not_in_stock_info_label" value="{NOT_IN_STOCK_INFO_LABEL}">
-            </div>
-        </div>
-        <!-- / -->
-
-        <!-- stock_info_value_label -->
-        <div class="row l2">
-            <div class="label">Надпись перед значением</div>
-            <div class="control">
-                <input type="text" class="stock_value_label" field="stock_value_label" value="{CONTENT}">
-            </div>
-        </div>
-        <!-- / -->
-
-        <div class="row l2">
-            <div class="label">Если есть под заказ</div>
-            <div class="control">
-                {IN_UNDER_ORDER_DISPLAY_TOGGLE}
-                <!-- if in_under_order_info_enabled -->
-                {IN_UNDER_ORDER_INFO_MODE_SWITCHER}
-                <!-- / -->
-            </div>
-        </div>
-
-        {*
-
-            under_order
-
-        *}
-
-        <!-- if in_under_order_label_control -->
-        <div class="row l3">
-            <div class="label">Надпись</div>
-            <div class="control">
-                <input type="text" class="in_under_order_info_label" field="in_under_order_info_label" value="{IN_UNDER_ORDER_INFO_LABEL}">
-            </div>
-        </div>
-        <!-- / -->
-
-        <div class="row l2">
-            <div class="label">Если нет под заказ</div>
-            <div class="control">
-                {NOT_IN_UNDER_ORDER_DISPLAY_TOGGLE}
-                <!-- if not_in_under_order_info_enabled -->
-                {NOT_IN_UNDER_ORDER_INFO_MODE_SWITCHER}
-                <!-- / -->
-            </div>
-        </div>
-
-        <!-- if not_in_under_order_label_control -->
-        <div class="row l3">
-            <div class="label">Надпись</div>
-            <div class="control">
-                <input type="text" class="not_in_under_order_info_label" field="not_in_under_order_info_label" value="{NOT_IN_UNDER_ORDER_INFO_LABEL}">
-            </div>
-        </div>
-        <!-- / -->
-
-        <!-- under_order_info_value_label -->
-        <div class="row l2">
-            <div class="label">Надпись перед значением</div>
-            <div class="control">
-                <input type="text" class="under_order_value_label" field="under_order_value_label" value="{CONTENT}">
-            </div>
-        </div>
-        <!-- / -->
-
-        {*
-
-            stock info common
-
-        *}
-
-        <div class="row l2">
-            <div class="label">Округление</div>
-            <div class="control">
-                {STOCK_ROUNDING_TOGGLE}
-                <!-- if stock_rounding_enabled -->
-                {STOCK_ROUNDING_MODE_SWITCHER}
-                <!-- / -->
-            </div>
-        </div>
 
     </div>
 
@@ -222,12 +346,12 @@
             <div class="label">Размер картинки</div>
             <div class="control image_size">
                 <div class="inputs">
-                    <input type="text" class="image_dimension" field="width" value="{IMAGE_WIDTH}">
-                    <input type="text" class="image_dimension" field="height" value="{IMAGE_HEIGHT}">
+                    {IMAGE_WIDTH_INPUT}
+                    {IMAGE_HEIGHT_INPUT}
                 </div>
                 {IMAGE_RESIZE_MODE_SWITCHER}
             </div>
         </div>
     </div>
-    
+
 </div>

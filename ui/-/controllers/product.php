@@ -4,14 +4,26 @@ class Product extends \Controller
 {
     private $product;
 
-    private $productId;
+    private $pivot;
+
+    /**
+     * @var \ss\components\products\Tile
+     */
+    private $tile;
+
+    private $cacheEnabled;
 
     public function __create()
     {
-        if ($this->product = $this->unpackModel('product')) {
-            $this->productId = $this->product->id;
+        $this->product = $this->unpackModel('product');
+        $this->pivot = $this->unpackModel('pivot');
 
-            $this->instance_($this->productId);
+        if ($this->product && $this->pivot) {
+            $this->instance_($this->product->id);
+
+            $this->tile = \ss\components\products\tile($this->product, $this->pivot);
+
+            $this->cacheEnabled = \ss\components\products\config('cache_enabled');
         } else {
             $this->lock();
         }
@@ -19,35 +31,27 @@ class Product extends \Controller
 
     public function reload()
     {
-        $product = $this->product;
-
-        $pivot = $this->unpackModel('pivot');
-
-        $tileData = $this->c('@tile/app')->renderTileData($product, $pivot, true, $this->data('multisource'));
-
-        aa($this->data, $tileData);
-
-        $this->jquery($this->_selector('|'))->replace($this->view());
+        $this->jquery('|')->replace($this->view());
     }
 
     public function view()
     {
+        $product = $this->product;
+        $tile = $this->tile;
+
         $v = $this->v('|');
 
-        $product = $this->product;
-
-        $cacheEnabled = $this->_env('local, remote/prod'); // todo МЕГАКОСТЫЛЬ
         $cacheFilePath = $this->getCacheFilePath();
 
-        if ($cacheEnabled && $cache = aread($cacheFilePath)) {
+        if ($this->cacheEnabled && $cache = aread($cacheFilePath)) {
             $v->setData($cache['v_data']);
         } else {
             $cacheData = [];
 
             $v->assign([
-                           'XPACK' => xpack_model($product),
-                           'CLASS' => $this->data('class'),
-                           'NAME'  => $product->name
+                           'PRODUCT_ID' => $product->id,
+                           'XPACK'      => xpack_model($product),
+                           'NAME'       => $tile->name
                        ]);
 
             $v = $this->assignCartCp($v);
@@ -55,17 +59,13 @@ class Product extends \Controller
             $v = $this->assignImage($v);
             $v = $this->assignNameFontSize($v);
             $v = $this->assignStockInfo($v);
-            $v = $this->assignUnderOrderInfo($v);
-
-//            $eventData = pack_models(map($this->data, 'product, pivot, in_stock'));
-//            $this->se('minicart/stage/update_quantity/' . jmd5([$this->productId]))->rebind(':reload', $eventData);
 
             $cache = [
                 'data'   => $cacheData,
                 'v_data' => $v->getData()
             ];
 
-            if ($cacheEnabled) {
+            if ($this->cacheEnabled) {
                 awrite($cacheFilePath, $cache);
             }
         }
@@ -77,26 +77,18 @@ class Product extends \Controller
 
     private function getCacheFilePath()
     {
-        $data = $this->data;
-
-        $cartInstance = $this->data['cart_instance'] ?? '';
-
-        $cart = cart($cartInstance);
-
-        $cartItemKey = jmd5([$this->productId]);
-
-        $quantity = $cart->stage->getQuantity($cartItemKey);
-        $inCartCount = $cart->getQuantity($cartItemKey);
-
-        $productArray = $this->product->toArray();
-
-        $cacheKey = jmd5([unmap($data, 'pivot, product'), $quantity, $inCartCount]);
+        $cacheKey = jmd5([
+                             $this->tile->pivotData,
+                             $this->tile->stageQuantity,
+                             $this->tile->cartQuantity,
+                             ss()->cats->getSelectedWarehousesGroup($this->product->tree_id)
+                         ]);
 
         $cacheFilePath = abs_path(
             'cache/ss/views',
-            'tree_' . $productArray['tree_id'],
-            'cat_' . $productArray['cat_id'],
-            'product_' . $productArray['id'],
+            'tree_' . $this->product->tree_id,
+            'cat_' . $this->product->cat_id,
+            'product_' . $this->product->id,
             $this->_nodeId(),
             $cacheKey . '.php'
         );
@@ -104,107 +96,81 @@ class Product extends \Controller
         return $cacheFilePath;
     }
 
-//    private function getPriceAndUnits()
-//    {
-//        if ($this->data('sell_by_alt_units')) {
-//            $priceField = 'alt_price';
-//            $unitsField = 'alt_units';
-//            $otherPriceField = 'price';
-//            $otherUnitsField = 'units';
-//        } else {
-//            $priceField = 'price';
-//            $unitsField = 'units';
-//            $otherPriceField = 'alt_price';
-//            $otherUnitsField = 'alt_units';
-//        }
-//
-//        return [
-////            $this->product->{$priceField},
-//$this->data('price'),
-//$this->product->{$unitsField},
-//$this->product->{$otherPriceField},
-//$this->product->{$otherUnitsField}
-//        ];
-//    }
-
     private function assignCartCp(\ewma\Views\View $v)
     {
-        $cartInstance = $this->data('cart_instance') ?? '';
+        $product = $this->product;
+        $tile = $this->tile;
 
-        $cart = cart($cartInstance);
-
-        $cartItemKey = jmd5([$this->product->id]);
-
-        $stageQuantity = $cart->stage->getQuantity($cartItemKey);
-        $quantity = $cart->getQuantity($cartItemKey);
-
-        $quantify = $this->data('quantify');
-        $cartbuttonDisplay = $this->data('cartbutton/display');
-        $priceDisplay = $this->data('price_display');
-        $otherUnitsDisplay = $this->data('other_units_display');
-
-//        list($price, $units, $otherPrice, $otherUnits) = $this->getPriceAndUnits();
-
-        $price = $this->data('price');
-
-        $units = $this->product->units;
-
-        if ($priceDisplay) {
-            $v->assign('price', [
-                'VALUE' => number_format__($price),
-            ]);
-
-            if ($units) {
-                $v->assign('price/units', [
-                    'CONTENT' => $units
+        if ($tile->priceDisplay) {
+            if ($tile->price == 0 && $tile->zeropriceLabelEnabled) {
+                $v->assign('zeroprice_label', [
+                    'VALUE' => $tile->zeropriceLabelValue
                 ]);
+            } else {
+                $v->assign('price', [
+                    'VALUE' => $tile->priceFormatted,
+                ]);
+
+                if ($tile->units) {
+                    $v->assign('price/units', [
+                        'CONTENT' => $tile->units
+                    ]);
+                }
+
+                if ($tile->discountApplied) {
+                    $v->assign('price_without_discount', [
+                        'VALUE'    => $tile->priceWithoutDiscountFormatted,
+                        'DISCOUNT' => $tile->discount
+                    ]);
+
+                    if ($tile->units) {
+                        $v->assign('price_without_discount/units', [
+                            'CONTENT' => $tile->units
+                        ]);
+                    }
+                }
             }
         }
 
-//        if ($otherUnitsDisplay && $otherPrice) {
-//            $v->assign('alt_price', [
-//                'VALUE' => number_format__($otherPrice)
-//            ]);
-//
-//            if ($otherUnits) {
-//                $v->assign('alt_price/units', [
-//                    'CONTENT' => $otherUnits
-//                ]);
-//            }
-//        }
-
-        if ($quantify && $cartbuttonDisplay) {
+        if ($tile->cartbuttonQuantify && $tile->cartbuttonDisplay) {
             $v->assign('quantify', [
-                'VALUE' => $stageQuantity
+                'VALUE' => $tile->stageQuantity
             ]);
 
-            if ($priceDisplay) {
+            if ($tile->priceDisplay) {
                 $v->assign('quantify/total_cost', [
-                    'VALUE' => number_format__($price * $stageQuantity)
+                    'VALUE' => $tile->getTotalCost($tile->stageQuantity)
                 ]);
             }
         }
 
-        if (!$quantify && $stageQuantity > 1) { // todo сброс на кратность
-            cart($cartInstance)->stage->setQuantity($cartItemKey, 1);
+        if (!$tile->cartbuttonQuantify && $tile->stageQuantity > 1) {
+            $tile->cart->stage->setQuantity($product, 1);
         }
 
-        if ($cartbuttonDisplay) {
-            $cartButtonLabel = $this->data('cartbutton/label') or
-            $cartButtonLabel = 'Купить';
+        if ($tile->cartbuttonDisplay) {
+            $cartButtonData = [
+                'cart_instance'          => $tile->cartInstance,
+                'product'                => pack_model($product),
+                'name'                   => $tile->name,
+                'price'                  => $tile->price,
+                'price_without_discount' => $tile->priceWithoutDiscount,
+                'discount'               => $tile->discountApplied ? $tile->discount : 0,
+                'units'                  => $tile->units,
+                'price_display'          => $tile->priceDisplay
+            ];
 
             $v->assign('cartbutton', [
-                'IN_CART_CLASS' => $quantity ? 'in_cart' : '',
-                'LABEL'         => $cartButtonLabel
+                'IN_CART_CLASS' => $tile->cartQuantity ? 'in_cart' : '',
+                'LABEL'         => $tile->cartbuttonLabel ?: 'Купить',
+                'DATA'          => j64_($cartButtonData)
             ]);
 
-            if ($quantity) {
-                $v->assign('cartbutton/items_count', [
-                    'ITEMS_COUNT' => $quantity
+            if ($tile->cartQuantity) {
+                $v->assign('cartbutton/products_count', [
+                    'PRODUCTS_COUNT' => $tile->cartQuantity
                 ]);
             };
-
-            $v->assign('CART_INSTANCE', j64_($cartInstance));
         }
 
         return $v;
@@ -225,15 +191,19 @@ class Product extends \Controller
 
     private function assignImage(\ewma\Views\View $v)
     {
+        $tile = $this->tile;
+
         $image = $this->c('\std\images~:first', [
             'model'       => $this->product,
             'query'       => '528 528 fit',
-            'href'        => $this->data('image/href'),
+            'href'        => $tile->imageHref,
             'cache_field' => 'images_cache'
         ]);
 
         if ($image) {
-            $v->assign('IMAGE', $image->view);
+            $v->assign([
+                           'IMAGE' => $image->view
+                       ]);
         }
 
         return $v;
@@ -241,15 +211,15 @@ class Product extends \Controller
 
     private function assignNameFontSize(\ewma\Views\View $v)
     {
-        $width = $this->data('image/width') ?: 225;
+        $tile = $this->tile;
 
         $nameFontSize = 18;
 
-        if (strlen($this->product->name) > 50) {
+        if (strlen($tile->name) > 50) {
             $nameFontSize = 15;
         }
 
-        if ($width < 225) {
+        if ($tile->imageWidth < 225) {
             $nameFontSize *= 0.8;
         }
 
@@ -260,111 +230,27 @@ class Product extends \Controller
 
     private function assignStockInfo(\ewma\Views\View $v)
     {
-        $product = $this->product;
+        $tile = $this->tile;
 
-        $inStock = $this->data('in_stock');
+        $v->assign('stock');
 
-        $stockInfoSettingsPath = $inStock ? 'in_stock' : 'not_in_stock';
-
-        if ($this->data('stock_info/' . $stockInfoSettingsPath . '/display')) {
-            $stockInfoMode = $this->data('stock_info/' . $stockInfoSettingsPath . '/mode') ?? 'value';
-
-            $v->assign('stock_info', [
-                'MODE'        => $stockInfoMode,
-                'STOCK_CLASS' => $inStock ? 'in_stock' : 'not_in_stock'
+        foreach ($tile->stockGroupsInfo as $groupInfo) {
+            $v->assign('stock/group', [
+                'TYPE'  => $groupInfo['type'],
+                'CLASS' => $groupInfo['in_stock'] ? 'in_stock' : 'not_in_stock',
             ]);
 
-            if ($stockInfoMode == 'value') {
-                $stock = $this->data('stock');
-
-                if ($this->data('stock_info/common/rounding/enabled')) {
-                    $roundingMode = $this->data('stock_info/common/rounding/mode');
-
-                    if ($roundingMode == 'floor') {
-                        $stock = floor($stock);
-                    }
-
-                    if ($roundingMode == 'round') {
-                        $stock = round($stock);
-                    }
-
-                    if ($roundingMode == 'ceil') {
-                        $stock = ceil($stock);
-                    }
-                }
-
-                $v->assign('stock_info/value', [
-                    'LABEL' => $this->data('stock_info/common/stock_value_label'),
-                    'VALUE' => trim_zeros($stock)
-                ]);
-
-                if ($product->units) {
-                    $v->assign('stock_info/value/units', [
-                        'CONTENT' => $product->units
-                    ]);
-                }
-            }
-
-            if ($stockInfoMode == 'label') {
-                $v->assign('stock_info/label', [
-                    'CONTENT' => $this->data('stock_info/' . $stockInfoSettingsPath . '/label')
+            if ($groupInfo['mode'] == 'value') {
+                $v->assign('stock/group/value', [
+                    'LABEL' => $groupInfo['value_label'],
+                    'VALUE' => $groupInfo['value'],
+                    'UNITS' => $tile->units ? ' ' . $tile->units : ''
                 ]);
             }
-        }
 
-        return $v;
-    }
-
-    private function assignUnderOrderInfo(\ewma\Views\View $v)
-    {
-        $product = $this->product;
-
-        $inUnderOrder = $this->data('in_under_order');
-
-        $underOrderInfoSettingsPath = $inUnderOrder ? 'in_under_order' : 'not_in_under_order';
-
-        if ($this->data('stock_info/' . $underOrderInfoSettingsPath . '/display')) {
-            $underOrderInfoMode = $this->data('stock_info/' . $underOrderInfoSettingsPath . '/mode') ?? 'value';
-
-            $v->assign('under_order_info', [
-                'MODE'        => $underOrderInfoMode,
-                'STOCK_CLASS' => $inUnderOrder ? 'in_under_order' : 'not_in_under_order'
-            ]);
-
-            if ($underOrderInfoMode == 'value') {
-                $underOrder = $this->data('under_order');
-
-                if ($this->data('stock_info/common/rounding/enabled')) {
-                    $roundingMode = $this->data('stock_info/common/rounding/mode');
-
-                    if ($roundingMode == 'floor') {
-                        $underOrder = floor($underOrder);
-                    }
-
-                    if ($roundingMode == 'round') {
-                        $underOrder = round($underOrder);
-                    }
-
-                    if ($roundingMode == 'ceil') {
-                        $underOrder = ceil($underOrder);
-                    }
-                }
-
-                $v->assign('under_order_info/value', [
-                    'LABEL' => $this->data('stock_info/common/under_order_value_label'),
-                    'VALUE' => trim_zeros($underOrder)
-                ]);
-
-                if ($product->units) {
-                    $v->assign('under_order_info/value/units', [
-                        'CONTENT' => $product->units
-                    ]);
-                }
-            }
-
-            if ($underOrderInfoMode == 'label') {
-                $v->assign('under_order_info/label', [
-                    'CONTENT' => $this->data('stock_info/' . $underOrderInfoSettingsPath . '/label')
+            if ($groupInfo['mode'] == 'label') {
+                $v->assign('stock/group/label', [
+                    'CONTENT' => $groupInfo['label']
                 ]);
             }
         }

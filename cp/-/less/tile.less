@@ -20,10 +20,85 @@
         margin-right: 20px;
         margin: 5px 0;
 
-        > .row {
+        > .row, .row_group > .row {
             padding: 5px 0;
             display: flex;
             align-items: flex-start;
+
+            &.stock_info {
+                display: flex;
+                align-items: center;
+                height: 20px;
+
+                .label {
+
+                }
+
+                .add_group_control {
+                    margin-left: 5px;
+
+                    .button {
+                        width: 20px;
+                        height: 20px;
+
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+
+                        .icon {
+                            font-size: 14px;
+                            color: #d0d0d0;
+                        }
+                    }
+
+                    .selector {
+                        display: none;
+                    }
+
+                    &:hover {
+
+                        .button {
+                            display: none;
+                        }
+
+                        .selector {
+                            display: block;
+                        }
+                    }
+                }
+            }
+
+            &.warehouse_group {
+                display: flex;
+                align-items: center;
+                height: 20px;
+
+                .label {
+
+                }
+
+                .disable_button {
+                    cursor: pointer;
+                    width: 20px;
+                    height: 20px;
+
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+
+                    .icon {
+                        font-size: 14px;
+                        color: #d0d0d0;
+                    }
+
+                    &:hover {
+
+                        .icon {
+                            color: #cf0000;
+                        }
+                    }
+                }
+            }
 
             > .label {
                 padding: 3px 0;
@@ -63,6 +138,7 @@
                     cursor: pointer;
                     float: left;
                     padding: 3px 8px;
+                    margin-right: 5px;
                     background-color: #E0E0E0;
                     border-radius: 3px;
 
@@ -111,70 +187,12 @@
                     }
                 }
 
-                .cartbutton_toggle {
-                    .toggle;
-                }
-
-                .quantify_toggle {
-                    .toggle;
-                }
-
-                .price_toggle {
-                    .toggle;
-                }
-
-                .price_rounding_toggle {
-                    .toggle;
-                }
-
-                .name_priority_switcher {
+                .switcher {
                     .switcher;
                 }
 
-                .price_rounding_mode_switcher {
-                    .switcher;
-
-                    margin-left: 5px;
-                }
-
-                .zeroprice_label_toggle {
+                .toggle {
                     .toggle;
-                }
-
-                .stock_display_toggle {
-                    .toggle;
-                }
-
-                .stock_info_mode_switcher {
-                    .switcher;
-
-                    margin-left: 5px;
-                }
-
-                .stock_rounding_toggle {
-                    .toggle;
-                }
-
-                .stock_rounding_mode_switcher {
-                    .switcher;
-
-                    margin-left: 5px;
-                }
-
-                .under_order_display_toggle {
-                    .toggle;
-                }
-
-                .under_order_info_mode_switcher {
-                    .switcher;
-
-                    margin-left: 5px;
-                }
-
-                .under_order_rounding_mode_switcher {
-                    .switcher;
-
-                    margin-left: 5px;
                 }
 
                 .sell_units_toggle {
@@ -218,7 +236,7 @@
 
                 &.image_size {
                     display: flex;
-                    flex-direction: column;
+                    align-items: center;
 
                     .inputs {
                         display: flex;
@@ -226,17 +244,15 @@
                         input {
                             width: 52px;
 
-                            &.image_dimension[field='width'] {
+                            &.image_dimension {
                                 margin-right: 5px;
                             }
 
                         }
                     }
 
-                    .image_resize_mode_switcher {
+                    .switcher {
                         .switcher;
-
-                        margin-top: 5px;
                     }
                 }
             }
@@ -256,6 +272,17 @@
 
                 > .label {
                     margin-left: 40px;
+                }
+
+                > .control {
+
+                }
+            }
+
+            &.l4 {
+
+                > .label {
+                    margin-left: 60px;
                 }
 
                 > .control {

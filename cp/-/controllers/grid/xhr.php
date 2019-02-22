@@ -4,110 +4,88 @@ class Xhr extends \Controller
 {
     public $allow = self::XHR;
 
-    private function triggerUpdate($catId)
+    private function triggerUpdate($catId, $reload = true)
     {
         pusher()->trigger('ss/container/' . $catId . '/update_pivot');
+
+        if ($reload) {
+            $this->reload();
+        }
     }
 
     public function reload()
     {
-        $this->c('<:reload', [], true);
+        $this->c('grid:reload', [], true);
     }
 
-    public function toggleName()
+    public function updateStringValue()
     {
         if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/name_display', $this->data('value'));
+            if ($path = _j64($this->data('path'))) {
+                $value = $this->processStringValue($path);
 
-            $this->triggerUpdate($pivot->cat_id);
+                ss()->cats->apComponentPivotData($pivot, 'grid/' . $path, $value);
+
+                $this->valueUpdateCallback($pivot, $path);
+
+                $this->widget('<:|', 'savedHighlight', $this->data('path'));
+
+                $this->triggerUpdate($pivot->cat_id, false);
+            }
         }
     }
 
-    public function toggleDescription()
+    private function processStringValue($path)
     {
-        if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/description_display', $this->data('value'));
+        $value = $this->data('value');
 
-            $this->triggerUpdate($pivot->cat_id);
+        if ($path == 'filters/stock/minimum/value') {
+            $value = (int)$value;
         }
+
+        return $value;
     }
 
-    public function toggleNotInStockProducts()
+    private function valueUpdateCallback($pivot, $path)
     {
-        if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/not_in_stock_products_display', $this->data('value'));
 
-            $this->triggerUpdate($pivot->cat_id);
-        }
     }
 
-    public function toggleNotInUnderOrderProducts()
+    public function toggle()
     {
         if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/not_in_under_order_products_display', $this->data('value'));
-
-            $this->triggerUpdate($pivot->cat_id);
-        }
-    }
-
-    public function toggleStockMinimum()
-    {
-        if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/stock_minimum/enabled', $this->data('value'));
-
-            $this->triggerUpdate($pivot->cat_id);
-        }
-    }
-
-    public function toggleUnderOrderMinimum()
-    {
-        if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/under_order_minimum/enabled', $this->data('value'));
-
-            $this->triggerUpdate($pivot->cat_id);
-        }
-    }
-
-    public function updateStockMinimumValue()
-    {
-        if ($pivot = $this->unxpackModel('pivot')) {
-            $value = $this->data('value');
-
-            $value = \ss\support\Support::parseDecimal($value);
-
-            if (is_numeric($value)) {
-                ss()->cats->apComponentPivotData($pivot, 'grid/stock_minimum/value', $value);
-
-                $this->widget('<:|', 'savedHighlight', 'stock_minimum_value');
+            if ($path = _j64($this->data('path'))) {
+                ss()->cats->invertComponentPivotData($pivot, 'grid/' . $path);
 
                 $this->triggerUpdate($pivot->cat_id);
             }
         }
     }
 
-    public function updateUnderOrderMinimumValue()
+    public function switch()
     {
         if ($pivot = $this->unxpackModel('pivot')) {
-            $value = $this->data('value');
+            if ($path = _j64($this->data('path'))) {
+                if ($value = _j64($this->data('value'))) {
+                    ss()->cats->apComponentPivotData($pivot, 'grid/' . $path, $value);
 
-            $value = \ss\support\Support::parseDecimal($value);
-
-            if (is_numeric($value)) {
-                ss()->cats->apComponentPivotData($pivot, 'grid/under_order_minimum/value', $value);
-
-                $this->widget('<:|', 'savedHighlight', 'under_order_minimum_value');
-
-                $this->triggerUpdate($pivot->cat_id);
+                    $this->triggerUpdate($pivot->cat_id);
+                }
             }
         }
     }
 
-    public function toggleZeropriceProductsDisplay()
-    {
-        if ($pivot = $this->unxpackModel('pivot')) {
-            ss()->cats->apComponentPivotData($pivot, 'grid/zeroprice_products_display', $this->data('value'));
+    // stock filter
 
-            $this->triggerUpdate($pivot->cat_id);
-        }
-    }
+//    public function toggleStockFilterGroup()
+//    {
+//        $pivot = $this->unxpackModel('pivot');
+//        $group = $this->unxpackModel('group');
+//
+//        if ($pivot && $group) {
+//            ss()->cats->invertComponentPivotData($pivot, 'grid/filters/stock/groups/' . $group->id);
+//
+//            $this->triggerUpdate($pivot->cat_id);
+//        }
+//    }
 }

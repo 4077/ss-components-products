@@ -11,33 +11,28 @@ var __nodeNs__ = "ss_components_products_cp";
             var w = this;
             var $w = w.element;
 
-            $("input.stock_minimum_value", $w).rebind("blur cut paste keyup", function (e) {
-                if (e.which != 9) {
-                    var value = $(this).val();
+            var updateStringValue = function ($input) {
+                w.r('updateStringValue', {
+                    path:  $input.attr("path"),
+                    value: $input.val()
+                });
+            };
 
-                    w.r('updateStockMinimumValue', {
-                        value: value
-                    });
+            var $grid = $("> .grid", $w);
 
-                    $(this).addClass("updating");
-                }
+            $("input[path]", $grid).rebind("blur cut paste", function () {
+                updateStringValue($(this));
             });
 
-            $("input.under_order_minimum_value", $w).rebind("blur cut paste keyup", function (e) {
-                if (e.which != 9) {
-                    var value = $(this).val();
-
-                    w.r('updateUnderOrderMinimumValue', {
-                        value: value
-                    });
-
-                    $(this).addClass("updating");
+            $("input[path]", $grid).rebind("keyup", function (e) {
+                if (e.which === 13) {
+                    updateStringValue($(this));
                 }
             });
         },
 
-        savedHighlight: function (field) {
-            var $field = $("input[field='" + field + "']", this.element);
+        savedHighlight: function (path) {
+            var $field = $("input[path='" + path + "']", this.element);
 
             $field.removeClass("updating").addClass("saved");
 

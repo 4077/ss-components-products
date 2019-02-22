@@ -4,13 +4,25 @@ class Tile extends \Controller
 {
     private $pivot;
 
+    private $pivotXPack;
+
+    private $pivotData;
+
     public function __create()
     {
         if ($this->pivot = $this->unpackModel('pivot')) {
             $this->instance_($this->pivot->id);
+
+            $this->pivotXPack = xpack_model($this->pivot);
+            $this->pivotData = _j($this->pivot->data);
         } else {
             $this->lock();
         }
+    }
+
+    public function tileData($path = false)
+    {
+        return ap($this->pivotData, 'tile/' . $path);
     }
 
     public function reload()
@@ -22,304 +34,42 @@ class Tile extends \Controller
     {
         $v = $this->v('|');
 
-        $pivot = $this->pivot;
-        $pivotXPack = xpack_model($pivot);
+        $this->assignNameCp($v);
+        $this->assignLayoutCp($v);
+        $this->assignStockInfoCp($v);
+        $this->assignPriceCp($v);
+        $this->assignCartbuttonCp($v);
+        $this->assignUnitsCp($v);
 
-        $pivotData = _j($pivot->data);
+        $this->css();
 
-        $tileData = ap($pivotData, 'tile');
+        $this->widget(':|', [
+            '.payload' => [
+                'pivot' => $this->pivotXPack
+            ],
+            '.r'       => [
+                'updateStringValue' => $this->_p('>xhr:updateStringValue'),
+                'reload'            => $this->_abs('>xhr:reload', ['pivot' => $this->pivotXPack])
+            ]
+        ]);
 
-        $quantify = ap($tileData, 'quantify');
-        $cartbuttonDisplay = ap($tileData, 'cartbutton/display');
+        return $v;
+    }
 
-        $priceDisplay = ap($tileData, 'price_display');
-        $priceRoundingEnabled = ap($tileData, 'price_rounding/enabled');
-
-        $sellByAltUnits = ap($tileData, 'sell_by_alt_units');
-        $otherUnitsDisplay = ap($tileData, 'other_units_display');
-
-        $stockInfo = ap($tileData, 'stock_info');
-
-        $inStockInfoDisplay = ap($stockInfo, 'in_stock/display');
-        $notInStockInfoDisplay = ap($stockInfo, 'not_in_stock/display');
-
-        $inUnderOrderInfoDisplay = ap($stockInfo, 'in_under_order/display');
-        $notInUnderOrderInfoDisplay = ap($stockInfo, 'not_in_under_order/display');
-
-        $stockRoundingEnabled = ap($stockInfo, 'common/rounding/enabled');
-
+    private function assignLayoutCp(\ewma\Views\View $v)
+    {
         $v->assign([
-                       'NAME_PRIORITY_SWITCHER'                => $this->c('\std\ui\switcher~:view', [
-                           'path'    => $this->_p('>xhr:setNamePriority'),
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                           ],
-                           'value'   => ap($tileData, 'name_priority'),
-                           'class'   => 'name_priority_switcher',
-                           'classes' => [
-
-                           ],
-                           'buttons' => [
-                               [
-                                   'value' => 'full',
-                                   'label' => 'полное',
-                                   'class' => 'full'
-                               ],
-                               [
-                                   'value' => 'remote_full',
-                                   'label' => '(ориг.)',
-                                   'class' => 'remote_full'
-                               ],
-                               [
-                                   'value' => 'short',
-                                   'label' => 'короткое',
-                                   'class' => 'short'
-                               ],
-                               [
-                                   'value' => 'remote_short',
-                                   'label' => '(ориг.)',
-                                   'class' => 'remote_short'
-                               ]
-                           ]
-                       ]),
-                       'CARTBUTTON_TOGGLE'                     => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleCartbutton',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$cartbuttonDisplay
-                           ],
-                           'class'   => 'cartbutton_toggle ' . ($cartbuttonDisplay ? 'enabled' : ''),
-                           'content' => $cartbuttonDisplay ? 'вкл.' : 'выкл.'
-                       ]),
-                       'CARTBUTTON_LABEL'                      => ap($tileData, 'cartbutton/label'),
-                       'QUANTIFY_TOGGLE'                       => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleQuantify',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$quantify
-                           ],
-                           'class'   => 'quantify_toggle ' . ($quantify ? 'enabled' : ''),
-                           'content' => $quantify ? 'вкл.' : 'выкл.'
-                       ]),
-                       'PRICE_TOGGLE'                          => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:togglePrice',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$priceDisplay
-                           ],
-                           'class'   => 'price_toggle ' . ($priceDisplay ? 'enabled' : ''),
-                           'content' => $priceDisplay ? 'да' : 'нет'
-                       ]),
-                       'SELL_UNITS_TOGGLE'                     => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleSellByAltUnits',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$sellByAltUnits
-                           ],
-                           'class'   => 'sell_units_toggle ' . ($sellByAltUnits ? 'enabled' : ''),
-                           'content' => $sellByAltUnits ? 'дополнительные' : 'основные'
-                       ]),
-                       'OTHER_UNITS_DISPLAY_TOGGLE'            => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleOtherUnitsDisplay',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$otherUnitsDisplay
-                           ],
-                           'class'   => 'other_units_display_toggle ' . ($otherUnitsDisplay ? 'enabled' : ''),
-                           'content' => $otherUnitsDisplay ? 'да' : 'нет'
-                       ]),
-                       //
-                       // stock
-                       //
-                       'IN_STOCK_DISPLAY_TOGGLE'               => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleInStockDisplay',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$inStockInfoDisplay
-                           ],
-                           'class'   => 'stock_display_toggle ' . ($inStockInfoDisplay ? 'enabled' : ''),
-                           'content' => $inStockInfoDisplay ? 'вкл.' : 'выкл.'
-                       ]),
-                       'NOT_IN_STOCK_DISPLAY_TOGGLE'           => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleNotInStockDisplay',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$notInStockInfoDisplay
-                           ],
-                           'class'   => 'stock_display_toggle ' . ($notInStockInfoDisplay ? 'enabled' : ''),
-                           'content' => $notInStockInfoDisplay ? 'вкл.' : 'выкл.'
-                       ]),
-                       'IN_STOCK_INFO_MODE_SWITCHER'           => $this->c('\std\ui\switcher~:view', [
-                           'path'    => $this->_p('>xhr:setInStockMode'),
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                           ],
-                           'value'   => ap($stockInfo, 'in_stock/mode'),
-                           'class'   => 'stock_info_mode_switcher',
-                           'classes' => [
-
-                           ],
-                           'buttons' => [
-                               [
-                                   'value' => 'value',
-                                   'label' => 'значение',
-                                   'class' => 'value'
-                               ],
-                               [
-                                   'value' => 'label',
-                                   'label' => 'надпись',
-                                   'class' => 'label'
-                               ]
-                           ]
-                       ]),
-                       'NOT_IN_STOCK_INFO_MODE_SWITCHER'       => $this->c('\std\ui\switcher~:view', [
-                           'path'    => $this->_p('>xhr:setNotInStockMode'),
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                           ],
-                           'value'   => ap($stockInfo, 'not_in_stock/mode'),
-                           'class'   => 'stock_info_mode_switcher',
-                           'classes' => [
-
-                           ],
-                           'buttons' => [
-                               [
-                                   'value' => 'value',
-                                   'label' => 'значение',
-                                   'class' => 'value'
-                               ],
-                               [
-                                   'value' => 'label',
-                                   'label' => 'надпись',
-                                   'class' => 'label'
-                               ]
-                           ]
-                       ]),
-                       'IN_STOCK_INFO_LABEL'                   => ap($stockInfo, 'in_stock/label'),
-                       'NOT_IN_STOCK_INFO_LABEL'               => ap($stockInfo, 'not_in_stock/label'),
-                       //
-                       // under_order
-                       //
-                       'IN_UNDER_ORDER_DISPLAY_TOGGLE'         => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleInUnderOrderDisplay',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$inUnderOrderInfoDisplay
-                           ],
-                           'class'   => 'under_order_display_toggle ' . ($inUnderOrderInfoDisplay ? 'enabled' : ''),
-                           'content' => $inUnderOrderInfoDisplay ? 'вкл.' : 'выкл.'
-                       ]),
-                       'NOT_IN_UNDER_ORDER_DISPLAY_TOGGLE'     => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleNotInUnderOrderDisplay',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$notInUnderOrderInfoDisplay
-                           ],
-                           'class'   => 'under_order_display_toggle ' . ($notInUnderOrderInfoDisplay ? 'enabled' : ''),
-                           'content' => $notInUnderOrderInfoDisplay ? 'вкл.' : 'выкл.'
-                       ]),
-                       'IN_UNDER_ORDER_INFO_MODE_SWITCHER'     => $this->c('\std\ui\switcher~:view', [
-                           'path'    => $this->_p('>xhr:setInUnderOrderMode'),
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                           ],
-                           'value'   => ap($stockInfo, 'in_under_order/mode'),
-                           'class'   => 'under_order_info_mode_switcher',
-                           'classes' => [
-
-                           ],
-                           'buttons' => [
-                               [
-                                   'value' => 'value',
-                                   'label' => 'значение',
-                                   'class' => 'value'
-                               ],
-                               [
-                                   'value' => 'label',
-                                   'label' => 'надпись',
-                                   'class' => 'label'
-                               ]
-                           ]
-                       ]),
-                       'NOT_IN_UNDER_ORDER_INFO_MODE_SWITCHER' => $this->c('\std\ui\switcher~:view', [
-                           'path'    => $this->_p('>xhr:setNotInUnderOrderMode'),
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                           ],
-                           'value'   => ap($stockInfo, 'not_in_under_order/mode'),
-                           'class'   => 'under_order_info_mode_switcher',
-                           'classes' => [
-
-                           ],
-                           'buttons' => [
-                               [
-                                   'value' => 'value',
-                                   'label' => 'значение',
-                                   'class' => 'value'
-                               ],
-                               [
-                                   'value' => 'label',
-                                   'label' => 'надпись',
-                                   'class' => 'label'
-                               ]
-                           ]
-                       ]),
-                       'IN_UNDER_ORDER_INFO_LABEL'             => ap($stockInfo, 'in_under_order/label'),
-                       'NOT_IN_UNDER_ORDER_INFO_LABEL'         => ap($stockInfo, 'not_in_under_order/label'),
-                       //
-                       //
-                       //
-                       'STOCK_ROUNDING_TOGGLE'                 => $this->c('\std\ui button:view', [
-                           'path'    => '>xhr:toggleStockRounding',
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                               'value' => !$stockRoundingEnabled
-                           ],
-                           'class'   => 'stock_rounding_toggle ' . ($stockRoundingEnabled ? 'enabled' : ''),
-                           'content' => $stockRoundingEnabled ? 'вкл.' : 'выкл.'
-                       ]),
-                       'STOCK_ROUNDING_MODE_SWITCHER'          => $this->c('\std\ui\switcher~:view', [
-                           'path'    => $this->_p('>xhr:setStockRoundingMode'),
-                           'data'    => [
-                               'pivot' => $pivotXPack,
-                           ],
-                           'value'   => ap($stockInfo, 'common/rounding/mode'),
-                           'class'   => 'stock_rounding_mode_switcher',
-                           'classes' => [
-
-                           ],
-                           'buttons' => [
-                               [
-                                   'value' => 'floor',
-                                   'label' => '<',
-                                   'class' => 'value',
-                                   'title' => 'К меньшему'
-                               ],
-                               [
-                                   'value' => 'round',
-                                   'label' => '|',
-                                   'class' => 'label',
-                                   'title' => 'К ближайшему'
-                               ],
-                               [
-                                   'value' => 'ceil',
-                                   'label' => '>',
-                                   'class' => 'label',
-                                   'title' => 'К большему'
-                               ]
-                           ]
-                       ]),
-                       'TEMPLATE_SELECTOR'                     => $this->templateSelectorView(),
-                       'IMAGE_WIDTH'                           => ap($tileData, 'image/width'),
-                       'IMAGE_HEIGHT'                          => ap($tileData, 'image/height'),
-                       'IMAGE_RESIZE_MODE'                     => ap($tileData, 'image/height'),
-                       'IMAGE_RESIZE_MODE_SWITCHER'            => $this->c('\std\ui\switcher~:view', [
+                       'TEMPLATE_SELECTOR'          => $this->templateSelectorView(),
+                       'IMAGE_WIDTH_INPUT'          => $this->stringValueInput('image/width', ['class' => 'image_dimension']),
+                       'IMAGE_HEIGHT_INPUT'         => $this->stringValueInput('image/height', ['class' => 'image_dimension']),
+                       'IMAGE_RESIZE_MODE'          => $this->tileData('image/height'),
+                       'IMAGE_RESIZE_MODE_SWITCHER' => $this->c('\std\ui\switcher~:view', [
                            'path'    => $this->_p('>xhr:setImageResizeMode'),
                            'data'    => [
-                               'pivot' => $pivotXPack,
+                               'pivot' => $this->pivotXPack,
                            ],
-                           'value'   => ap($tileData, 'image/resize_mode'),
-                           'class'   => 'image_resize_mode_switcher',
+                           'value'   => $this->tileData('image/resize_mode'),
+                           'class'   => 'switcher',
                            'classes' => [
 
                            ],
@@ -335,177 +85,12 @@ class Tile extends \Controller
                                    'class' => 'fit'
                                ]
                            ]
-                       ]),
+                       ])
                    ]);
-
-        if ($cartbuttonDisplay) {
-            $v->assign('cartbutton_enabled');
-        }
-
-        //
-
-        if ($priceDisplay) {
-            $v->assign('price_display');
-
-            $priceRoundingMode = ap($tileData, 'price_rounding/mode');
-            $zeropriceLabelEnabled = ap($tileData, 'zeroprice_label/enabled');
-            $zeropriceLabelValue = ap($tileData, 'zeroprice_label/value');
-
-            $v->assign([
-                           'PRICE_ROUNDING_TOGGLE'        => $this->c('\std\ui button:view', [
-                               'path'    => '>xhr:togglePriceRounding',
-                               'data'    => [
-                                   'pivot' => $pivotXPack,
-                                   'value' => !$priceRoundingEnabled
-                               ],
-                               'class'   => 'price_rounding_toggle ' . ($priceRoundingEnabled ? 'enabled' : ''),
-                               'content' => $priceRoundingEnabled ? 'вкл.' : 'выкл.'
-                           ]),
-                           'PRICE_ROUNDING_MODE_SWITCHER' => $this->c('\std\ui\switcher~:view', [
-                               'path'    => $this->_p('>xhr:setPriceRoundingMode'),
-                               'data'    => [
-                                   'pivot' => $pivotXPack,
-                               ],
-                               'value'   => $priceRoundingMode,
-                               'class'   => 'price_rounding_mode_switcher',
-                               'classes' => [
-
-                               ],
-                               'buttons' => [
-                                   [
-                                       'value' => 'floor',
-                                       'label' => '<',
-                                       'class' => 'value',
-                                       'title' => 'К меньшему'
-                                   ],
-                                   [
-                                       'value' => 'round',
-                                       'label' => '|',
-                                       'class' => 'label',
-                                       'title' => 'К ближайшему'
-                                   ],
-                                   [
-                                       'value' => 'ceil',
-                                       'label' => '>',
-                                       'class' => 'label',
-                                       'title' => 'К большему'
-                                   ]
-                               ]
-                           ]),
-                           'ZEROPRICE_LABEL_TOGGLE'       => $this->c('\std\ui button:view', [
-                               'path'    => '>xhr:toggleZeropriceLabel',
-                               'data'    => [
-                                   'pivot' => $pivotXPack,
-                                   'value' => !$zeropriceLabelEnabled
-                               ],
-                               'class'   => 'zeroprice_label_toggle ' . ($zeropriceLabelEnabled ? 'enabled' : ''),
-                               'content' => $zeropriceLabelEnabled ? 'вкл.' : 'выкл.'
-                           ]),
-                           'ZEROPRICE_LABEL_VALUE'        => $zeropriceLabelValue
-                       ]);
-
-            if ($priceRoundingEnabled) {
-                $v->assign('price_rounding_enabled');
-            }
-
-            if ($zeropriceLabelEnabled) {
-                $v->assign('zeroprice_label');
-            }
-        }
-
-        //
-
-        $stockInfoHasValueMode = false;
-
-        if ($inStockInfoDisplay) {
-            $v->assign('in_stock_info_enabled');
-
-            if (ap($stockInfo, 'in_stock/mode') == 'label') {
-                $v->assign('in_stock_label_control');
-            } else {
-                $stockInfoHasValueMode = true;
-            }
-        }
-
-        if ($notInStockInfoDisplay) {
-            $v->assign('not_in_stock_info_enabled');
-
-            if (ap($stockInfo, 'not_in_stock/mode') == 'label') {
-                $v->assign('not_in_stock_label_control');
-            } else {
-                $stockInfoHasValueMode = true;
-            }
-        }
-
-        if ($stockInfoHasValueMode) {
-            $v->assign('stock_info_value_label', [
-                'CONTENT' => ap($stockInfo, 'common/stock_value_label'),
-            ]);
-        }
-
-        //
-
-        $underOrderInfoHasValueMode = false;
-
-        if ($inUnderOrderInfoDisplay) {
-            $v->assign('in_under_order_info_enabled');
-
-            if (ap($stockInfo, 'in_under_order/mode') == 'label') {
-                $v->assign('in_under_order_label_control');
-            } else {
-                $underOrderInfoHasValueMode = true;
-            }
-        }
-
-        if ($notInUnderOrderInfoDisplay) {
-            $v->assign('not_in_under_order_info_enabled');
-
-            if (ap($stockInfo, 'not_in_under_order/mode') == 'label') {
-                $v->assign('not_in_under_order_label_control');
-            } else {
-                $underOrderInfoHasValueMode = true;
-            }
-        }
-
-        if ($underOrderInfoHasValueMode) {
-            $v->assign('under_order_info_value_label', [
-                'CONTENT' => ap($stockInfo, 'common/under_order_value_label'),
-            ]);
-        }
-
-        //
-
-        if ($stockRoundingEnabled) {
-            $v->assign('stock_rounding_enabled');
-        }
-
-        $this->css();
-
-        $this->widget(':|', [
-            '.payload' => [
-                'pivot' => $pivotXPack
-            ],
-            '.r'       => [
-                'updateImageDimension'           => $this->_p('>xhr:updateImageDimension'),
-                'updateCartbuttonLabel'          => $this->_p('>xhr:updateCartbuttonLabel'),
-                'updateNotInStockInfoLabel'      => $this->_p('>xhr:updateNotInStockInfoLabel'),
-                'updateInStockInfoLabel'         => $this->_p('>xhr:updateInStockInfoLabel'),
-                'updateStockValueLabel'          => $this->_p('>xhr:updateStockValueLabel'),
-                'updateNotInUnderOrderInfoLabel' => $this->_p('>xhr:updateNotInUnderOrderInfoLabel'),
-                'updateInUnderOrderInfoLabel'    => $this->_p('>xhr:updateInUnderOrderInfoLabel'),
-                'updateUnderOrderValueLabel'     => $this->_p('>xhr:updateUnderOrderValueLabel'),
-                'updateZeropriceLabel'           => $this->_p('>xhr:updateZeropriceLabel'),
-                'reload'                         => $this->_p('>xhr:reload')
-            ]
-        ]);
-
-        return $v;
     }
 
-    public function templateSelectorView()
+    private function templateSelectorView()
     {
-        $pivot = $this->pivot;
-
         $templates = dataSets()->get('ss/components/products:tiles_templates');
 
         $items = [];
@@ -516,10 +101,506 @@ class Tile extends \Controller
         return $this->c('\std\ui select:view', [
             'path'     => '>xhr:selectTemplate',
             'data'     => [
-                'pivot' => xpack_model($pivot)
+                'pivot' => $this->pivotXPack
             ],
             'items'    => $items,
-            'selected' => ss()->cats->apComponentPivotData($pivot, 'tile/template')
+            'selected' => $this->tileData('template')
+        ]);
+    }
+
+    private function stringValueInput($path, $ra = [])
+    {
+        $attrs = [
+            'path'  => j64_($path),
+            'value' => $this->tileData($path)
+        ];
+
+        if ($ra) {
+            ra($attrs, $ra);
+        }
+
+        return $this->c('\std\ui tag:view:input', [
+            'attrs' => $attrs
+        ]);
+    }
+
+    private function toggleButton($path, $labels = ['да', 'нет'], $class = 'toggle')
+    {
+        $value = $this->tileData($path);
+
+        $buttonData = [
+            'path'    => '>xhr:toggle',
+            'data'    => [
+                'pivot' => $this->pivotXPack,
+                'path'  => j64_($path)
+            ],
+            'class'   => $class . ' ' . ($value ? 'enabled' : ''),
+            'content' => $value ? $labels[0] : $labels[1]
+        ];
+
+        return $this->c('\std\ui button:view', $buttonData);
+    }
+
+    private function switcher($path, $buttons)
+    {
+        $selectedValue = $this->tileData($path);
+
+        $switcherButtons = [];
+
+        foreach ($buttons as $value => $button) {
+            $switcherButtons[] = [
+                'label' => $button['label'] ?? '',
+                'value' => j64_($value),
+                'class' => $button['class'] ?? '',
+                'title' => $button['title'] ?? ''
+            ];
+        }
+
+        return $this->c('\std\ui\switcher~:view', [
+            'path'    => $this->_p('>xhr:switch'),
+            'data'    => [
+                'pivot' => $this->pivotXPack,
+                'path'  => j64_($path)
+            ],
+            'value'   => j64_($selectedValue),
+            'class'   => 'switcher',
+            'classes' => [
+
+            ],
+            'buttons' => $switcherButtons
+        ]);
+    }
+
+    private function assignNameCp(\ewma\Views\View $v)
+    {
+        $v->assign([
+                       'NAME_PRIORITY_SWITCHER' => $this->switcher('name/priority', [
+                           'full'         => [
+                               'label' => 'полное'
+                           ],
+                           'remote_full'  => [
+                               'label' => '(ориг.)'
+                           ],
+                           'short'        => [
+                               'label' => 'короткое'
+                           ],
+                           'remote_short' => [
+                               'label' => '(ориг.)'
+                           ],
+                       ])
+                   ]);
+    }
+
+    private function assignCartbuttonCp(\ewma\Views\View $v)
+    {
+        $cartbuttonDisplay = $this->tileData('cartbutton/display');
+
+        $v->assign([
+                       'CARTBUTTON_TOGGLE' => $this->toggleButton('cartbutton/display', ['вкл.', 'выкл.'])
+                   ]);
+
+        if ($cartbuttonDisplay) {
+            $v->assign('cartbutton', [
+                'LABEL_INPUT'     => $this->stringValueInput('cartbutton/label'),
+                'QUANTIFY_TOGGLE' => $this->toggleButton('cartbutton/quantify', ['вкл.', 'выкл.'])
+            ]);
+        }
+    }
+
+    private function assignUnitsCp(\ewma\Views\View $v)
+    {
+        $sellByAltUnits = $this->tileData('units/sell_by_alt_units');
+        $tryForceUnitsEnabled = $this->tileData('units/try_force_units/enabled');
+//        $otherUnitsDisplay = $this->tileData('units/other_units_display');
+
+        $v->assign([
+                       'SELL_UNITS_TOGGLE'      => $this->toggleButton('units/sell_by_alt_units', ['дополнительные', 'основные'], 'sell_units_toggle'),
+                       //                       'OTHER_UNITS_DISPLAY_TOGGLE' => $this->c('\std\ui button:view', [
+                       //                           'path'    => '>xhr:toggleOtherUnitsDisplay',
+                       //                           'data'    => [
+                       //                               'pivot' => $this->pivotXPack
+                       //                           ],
+                       //                           'class'   => 'toggle ' . ($otherUnitsDisplay ? 'enabled' : ''),
+                       //                           'content' => $otherUnitsDisplay ? 'да' : 'нет'
+                       //                       ]),
+                       'TRY_FORCE_UNITS_TOGGLE' => $this->toggleButton('units/try_force_units/enabled')
+                   ]);
+
+        if ($tryForceUnitsEnabled) {
+            $v->assign('try_force_units', [
+                'LIST_INPUT' => $this->stringValueInput('units/try_force_units/list')
+            ]);
+        }
+    }
+
+    private function assignPriceCp(\ewma\Views\View $v)
+    {
+        $priceDisplay = $this->tileData('price/display');
+
+        $v->assign([
+                       'PRICE_TOGGLE' => $this->toggleButton('price/display')
+                   ]);
+
+        if ($priceDisplay) {
+            $roundingEnabled = $this->tileData('price/rounding/enabled');
+            $zeropriceLabelEnabled = $this->tileData('price/zeroprice_label/enabled');
+
+            $v->assign('price', [
+                'ROUNDING_TOGGLE'        => $this->toggleButton('price/rounding/enabled', ['вкл.', 'выкл.']),
+                'ROUNDING_MODE_SWITCHER' => $roundingEnabled
+                    ? $this->switcher('price/rounding/mode', [
+                        'floor' => [
+                            'label' => '<',
+                            'title' => 'К меньшему'
+                        ],
+                        'round' => [
+                            'label' => '|',
+                            'title' => 'К ближайшему'
+                        ],
+                        'ceil'  => [
+                            'label' => '>',
+                            'title' => 'К большему'
+                        ]
+                    ])
+                    : '',
+                'ZEROPRICE_LABEL_TOGGLE' => $this->toggleButton('price/zeroprice_label/enabled', ['вкл.', 'выкл.']),
+                'DISCOUNT_TOGGLE'        => $this->toggleButton('price/discount/display'),
+            ]);
+
+            if ($zeropriceLabelEnabled) {
+                $v->assign('price/zeroprice_label', [
+                    'LABEL_INPUT' => $this->stringValueInput('price/zeroprice_label/value')
+                ]);
+            }
+        }
+    }
+
+    private function assignStockInfoCp(\ewma\Views\View $v)
+    {
+        $stockDisplay = $this->tileData('stock/display');
+
+        $v->assign([
+                       'STOCK_TOGGLE' => $this->toggleButton('stock/display', ['вкл.', 'выкл.'])
+                   ]);
+
+        if ($stockDisplay) {
+            $stockRoundingEnabled = $this->tileData('stock/rounding/enabled');
+
+            $v->assign('stock', [
+                'ROUNDING_TOGGLE'        => $this->toggleButton('stock/rounding/enabled', ['вкл.', 'выкл.']),
+                'ROUNDING_MODE_SWITCHER' => $stockRoundingEnabled
+                    ? $this->switcher('stock/rounding/mode', [
+                        'floor' => [
+                            'label' => '<',
+                            'title' => 'К меньшему'
+                        ],
+                        'round' => [
+                            'label' => '|',
+                            'title' => 'К ближайшему'
+                        ],
+                        'ceil'  => [
+                            'label' => '>',
+                            'title' => 'К большему'
+                        ]
+                    ])
+                    : ''
+            ]);
+
+            // selected group
+
+            $v->append('stock', [
+                'SELECTED_GROUP_IN_STOCK_DISPLAY_TOGGLE'     => $this->toggleButton('stock/selected_group/in_stock/display', ['вкл.', 'выкл.']),
+                'SELECTED_GROUP_IN_STOCK_MODE_SWITCHER'      => $this->tileData('stock/selected_group/in_stock/display')
+                    ? $this->switcher('stock/selected_group/in_stock/mode', [
+                        'value' => [
+                            'label' => 'значение'
+                        ],
+                        'label' => [
+                            'label' => 'надпись'
+                        ]
+                    ])
+                    : '',
+                'SELECTED_GROUP_NOT_IN_STOCK_DISPLAY_TOGGLE' => $this->toggleButton('stock/selected_group/not_in_stock/display', ['вкл.', 'выкл.']),
+                'SELECTED_GROUP_NOT_IN_STOCK_MODE_SWITCHER'  => $this->tileData('stock/selected_group/not_in_stock/display')
+                    ? $this->switcher('stock/selected_group/not_in_stock/mode', [
+                        'value' => [
+                            'label' => 'значение'
+                        ],
+                        'label' => [
+                            'label' => 'надпись'
+                        ]
+                    ])
+                    : '',
+            ]);
+
+            $selectedGroupInStockDisplay = $this->tileData('stock/selected_group/in_stock/display');
+            $selectedGroupInStockMode = $this->tileData('stock/selected_group/in_stock/mode');
+
+            if ($selectedGroupInStockDisplay && $selectedGroupInStockMode == 'label') {
+                $v->assign('stock/selected_group_in_stock_label', [
+                    'LABEL_INPUT' => $this->stringValueInput('stock/selected_group/in_stock/label')
+                ]);
+            }
+
+            $selectedGroupNotInStockDisplay = $this->tileData('stock/selected_group/not_in_stock/display');
+            $selectedGroupNotInStockMode = $this->tileData('stock/selected_group/not_in_stock/mode');
+
+            if ($selectedGroupNotInStockDisplay && $selectedGroupNotInStockMode == 'label') {
+                $v->assign('stock/selected_group_not_in_stock_label', [
+                    'LABEL_INPUT' => $this->stringValueInput('stock/selected_group/not_in_stock/label')
+                ]);
+            }
+
+            if (
+                ($selectedGroupInStockDisplay && $selectedGroupInStockMode == 'value') ||
+                ($selectedGroupNotInStockDisplay && $selectedGroupNotInStockMode == 'value')
+            ) {
+                $v->assign('stock/selected_group_value_label', [
+                    'LABEL_INPUT'                   => $this->stringValueInput('stock/selected_group/value_label/label'),
+                    'GROUP_NAME_IF_POSSIBLE_TOGGLE' => $this->toggleButton('stock/selected_group/value_label/group_name_if_possible')
+                ]);
+            }
+
+            // other groups
+
+            $v->append('stock', [
+                'OTHER_GROUPS_IN_STOCK_DISPLAY_TOGGLE'     => $this->toggleButton('stock/other_groups/in_stock/display', ['вкл.', 'выкл.']),
+                'OTHER_GROUPS_IN_STOCK_MODE_SWITCHER'      => $this->tileData('stock/other_groups/in_stock/display')
+                    ? $this->switcher('stock/other_groups/in_stock/mode', [
+                        'value' => [
+                            'label' => 'значение'
+                        ],
+                        'label' => [
+                            'label' => 'надпись'
+                        ]
+                    ])
+                    : '',
+                'OTHER_GROUPS_NOT_IN_STOCK_DISPLAY_TOGGLE' => $this->toggleButton('stock/other_groups/not_in_stock/display', ['вкл.', 'выкл.']),
+                'OTHER_GROUPS_NOT_IN_STOCK_MODE_SWITCHER'  => $this->tileData('stock/other_groups/not_in_stock/display')
+                    ? $this->switcher('stock/other_groups/not_in_stock/mode', [
+                        'value' => [
+                            'label' => 'значение'
+                        ],
+                        'label' => [
+                            'label' => 'надпись'
+                        ]
+                    ])
+                    : '',
+            ]);
+
+            $otherGroupsInStockDisplay = $this->tileData('stock/other_groups/in_stock/display');
+            $otherGroupsInStockMode = $this->tileData('stock/other_groups/in_stock/mode');
+
+            if ($otherGroupsInStockDisplay && $otherGroupsInStockMode == 'label') {
+                $v->assign('stock/other_groups_in_stock_label', [
+                    'LABEL_INPUT' => $this->stringValueInput('stock/other_groups/in_stock/label')
+                ]);
+            }
+
+            $otherGroupsNotInStockDisplay = $this->tileData('stock/other_groups/not_in_stock/display');
+            $otherGroupsNotInStockMode = $this->tileData('stock/other_groups/not_in_stock/mode');
+
+            if ($otherGroupsNotInStockDisplay && $otherGroupsNotInStockMode == 'label') {
+                $v->assign('stock/other_groups_not_in_stock_label', [
+                    'LABEL_INPUT' => $this->stringValueInput('stock/other_groups/not_in_stock/label')
+                ]);
+            }
+
+            if (
+                ($otherGroupsInStockDisplay && $otherGroupsInStockMode == 'value') ||
+                ($otherGroupsNotInStockDisplay && $otherGroupsNotInStockMode == 'value')
+            ) {
+                $v->assign('stock/other_groups_value_label', [
+                    'LABEL_INPUT'                   => $this->stringValueInput('stock/other_groups/value_label/label'),
+                    'GROUP_NAME_IF_POSSIBLE_TOGGLE' => $this->toggleButton('stock/other_groups/value_label/group_name_if_possible')
+                ]);
+            }
+
+            //
+            // assigned groups
+            //
+
+//            $groups = \ss\multisource\models\WarehouseGroup::orderBy('position')->get();
+//
+//            $assignedStockWarehousesGroups = $this->tileData('stock/groups');
+//            $assignedStockWarehousesGroupsIds = array_keys($assignedStockWarehousesGroups);
+//
+//            $items = [0 => ''];
+//
+//            foreach ($groups as $group) {
+//                $groupInfo = ap($assignedStockWarehousesGroups, $group->id);
+//
+//                if (!in_array($group->id, $assignedStockWarehousesGroupsIds) || !$groupInfo['enabled']) {
+//                    $items[$group->id] = $group->name;
+//                }
+//            }
+//
+//            $v->assign([
+//                           'STOCK_WAREHOUSE_GROUP_SELECTOR' => $this->c('\std\ui select:view', [
+//                               'path'  => '>xhr:assignStockInfoGroup',
+//                               'data'  => [
+//                                   'pivot' => $this->pivotXPack
+//                               ],
+//                               'items' => $items
+//                           ])
+//                       ]);
+//
+//            // groups
+//
+//            foreach ($groups as $group) {
+//                $groupInfo = ap($assignedStockWarehousesGroups, $group->id);
+//
+//                if (!in_array($group->id, $assignedStockWarehousesGroupsIds) || !ap($groupInfo, 'enabled')) {
+//                    continue;
+//                }
+//
+//                $groupXPack = xpack_model($group);
+//
+//                $inStockInfo = ap($groupInfo, 'in_stock');
+//                $notInStockInfo = ap($groupInfo, 'not_in_stock');
+//
+//                $inStockInfoDisplay = ap($inStockInfo, 'display');
+//                $notInStockInfoDisplay = ap($notInStockInfo, 'display');
+//
+//                $v->assign('stock/warehouse_group', [
+//                    'GROUP_NAME'                  => $group->name,
+//                    'DISABLE_BUTTON'              => $this->c('\std\ui button:view', [
+//                        'path'  => '>xhr:disableWarehousesGroup',
+//                        'data'  => [
+//                            'pivot' => $this->pivotXPack,
+//                            'group' => $groupXPack
+//                        ],
+//                        'class' => 'disable_button',
+//                        'icon'  => 'fa fa-close'
+//                    ]),
+//                    'IN_STOCK_DISPLAY_TOGGLE'     => $this->c('\std\ui button:view', [
+//                        'path'    => '>xhr:toggleInStockDisplay',
+//                        'data'    => [
+//                            'pivot' => $this->pivotXPack,
+//                            'group' => $groupXPack
+//                        ],
+//                        'class'   => 'toggle ' . ($inStockInfoDisplay ? 'enabled' : ''),
+//                        'content' => $inStockInfoDisplay ? 'вкл.' : 'выкл.'
+//                    ]),
+//                    'NOT_IN_STOCK_DISPLAY_TOGGLE' => $this->c('\std\ui button:view', [
+//                        'path'    => '>xhr:toggleNotInStockDisplay',
+//                        'data'    => [
+//                            'pivot' => $this->pivotXPack,
+//                            'group' => $groupXPack
+//                        ],
+//                        'class'   => 'toggle ' . ($notInStockInfoDisplay ? 'enabled' : ''),
+//                        'content' => $notInStockInfoDisplay ? 'вкл.' : 'выкл.'
+//                    ])
+//                ]);
+//
+//                $hasValueMode = false;
+//
+//                if ($inStockInfoDisplay) {
+//                    $v->append('stock/warehouse_group', [
+//                        'IN_STOCK_MODE_SWITCHER' => $this->c('\std\ui\switcher~:view', [
+//                            'path'    => $this->_p('>xhr:setInStockMode'),
+//                            'data'    => [
+//                                'pivot' => $this->pivotXPack,
+//                                'group' => $groupXPack,
+//                            ],
+//                            'value'   => ap($inStockInfo, 'mode'),
+//                            'class'   => 'switcher',
+//                            'classes' => [
+//
+//                            ],
+//                            'buttons' => [
+//                                [
+//                                    'value' => 'value',
+//                                    'label' => 'значение',
+//                                    'class' => 'value'
+//                                ],
+//                                [
+//                                    'value' => 'label',
+//                                    'label' => 'надпись',
+//                                    'class' => 'label'
+//                                ]
+//                            ]
+//                        ])
+//                    ]);
+//
+//                    if (ap($inStockInfo, 'mode') == 'label') {
+//                        $v->assign('stock/warehouse_group/in_stock_label', [
+//                            'LABEL_INPUT' => $this->stringValueInput('stock/groups/' . $group->id . '/in_stock/label'),
+//                        ]);
+//                    } else {
+//                        $hasValueMode = true;
+//                    }
+//                }
+//
+//                if ($notInStockInfoDisplay) {
+//                    $v->append('stock/warehouse_group', [
+//                        'NOT_IN_STOCK_MODE_SWITCHER' => $this->c('\std\ui\switcher~:view', [
+//                            'path'    => $this->_p('>xhr:setNotInStockMode'),
+//                            'data'    => [
+//                                'pivot' => $this->pivotXPack,
+//                                'group' => $groupXPack,
+//                            ],
+//                            'value'   => ap($notInStockInfo, 'mode'),
+//                            'class'   => 'switcher',
+//                            'classes' => [
+//
+//                            ],
+//                            'buttons' => [
+//                                [
+//                                    'value' => 'value',
+//                                    'label' => 'значение',
+//                                    'class' => 'value'
+//                                ],
+//                                [
+//                                    'value' => 'label',
+//                                    'label' => 'надпись',
+//                                    'class' => 'label'
+//                                ]
+//                            ]
+//                        ])
+//                    ]);
+//
+//                    if (ap($notInStockInfo, 'mode') == 'label') {
+//                        $v->assign('stock/warehouse_group/not_in_stock_label', [
+//                            'LABEL_INPUT' => $this->stringValueInput('stock/groups/' . $group->id . '/not_in_stock/label'),
+//                        ]);
+//                    } else {
+//                        $hasValueMode = true;
+//                    }
+//                }
+//
+//                if ($hasValueMode) {
+//                    $v->assign('stock/warehouse_group/value_label', [
+//                        'LABEL_INPUT' => $this->stringValueInput('stock/groups/' . $group->id . '/value_label'),
+//                    ]);
+//                }
+//            }
+        }
+    }
+
+    public function stockWarehouseGroupSelector()
+    {
+        $groups = \ss\multisource\models\WarehouseGroup::orderBy('position')->get();
+
+        $assignedStockWarehousesGroups = $this->tileData('stock/groups');
+        $assignedStockWarehousesGroupsIds = array_keys($assignedStockWarehousesGroups);
+
+        $items = [0 => ''];
+
+        foreach ($groups as $group) {
+            $groupInfo = ap($assignedStockWarehousesGroups, $group->id);
+
+            if (!in_array($group->id, $assignedStockWarehousesGroupsIds) || !$groupInfo['enabled']) {
+                $items[$group->id] = $group->name;
+            }
+        }
+
+        return $this->c('\std\ui select:view', [
+            'path'  => '>xhr:assignStockInfoGroup',
+            'data'  => [
+                'pivot' => $this->pivotXPack
+            ],
+            'items' => $items
         ]);
     }
 }

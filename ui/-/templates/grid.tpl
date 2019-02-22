@@ -10,7 +10,7 @@
 
     <div class="tiles">
         <!-- tile -->
-        <div class="tile {HIDDEN_CLASS}" n="{N}" product_id="{PRODUCT_ID}">
+        <div class="tile {HIDDEN_CLASS}" n="{N}" item_id="{PRODUCT_ID}">
             <!-- if tile/cp -->
             <div class="cp">
                 <div class="l">
