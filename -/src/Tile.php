@@ -69,9 +69,17 @@ class Tile
 
     public $notRoundedPrice;
 
+    public $priceMin;
+
+    public $priceMinFormatted;
+
+    public $priceMax;
+
+    public $priceMaxFormatted;
+
     public $price;
 
-    public $priceFormatted;
+    public $priceIsRange;
 
     public $priceDisplay;
 
@@ -197,25 +205,49 @@ class Tile
         $summary = table_rows_by($product->multisourceSummary, 'warehouses_group_id');
 
         $totalStock = 0;
-        $price = 0;
+
+        $price = false;
+        $priceMin = PHP_INT_MAX;
+        $priceMax = 0;
+
         $discount = PHP_INT_MAX;
 
         $stockMultiplier = $this->areAltUnitsUsed() ? 1 / $product->unit_size : 1;
 
+        $useSelectedGroup = false;
         if ($selectedGroupId) {
+            $group = $groups[$selectedGroupId];
+
+            $groupWarehouses = ss()->multisource->getGroupWarehouses($group);
+
+            $hasFilials = false;
+
+            foreach ($groupWarehouses as $groupWarehouse) {
+                $isSupplier = $groupWarehouse->division->supplier;
+
+                if (!$isSupplier) {
+                    $hasFilials = true;
+                }
+            }
+
+            if ($hasFilials) {
+                $useSelectedGroup = true;
+            }
+        }
+
+        if ($useSelectedGroup) {
 
             //
             // selected group
             //
 
-            $group = $groups[$selectedGroupId];
             $groupSummary = $summary[$selectedGroupId];
 
             $stockInSelected = $groupSummary->stock - $groupSummary->reserved; //
             $totalStock += $stockInSelected;
 
             $stockInSelectedRounded = $this->roundStock($stockInSelected);
-            $inStock = $stockInSelectedRounded > $this->stockMinimumValue;
+            $inStock = $stockInSelectedRounded > 0 && $stockInSelectedRounded >= $this->stockMinimumValue;
 
             $this->inStock = $inStock;
 
@@ -236,42 +268,53 @@ class Tile
                 ];
             }
 
-            $price = max($price, $groupSummary->max_price);
+            list($priceMin, $priceMax) = $this->precisePrice($priceMin, $priceMax, $groupSummary);
+            list($priceMin, $priceMax, $price, $priceIsRange) = $this->renderPriceVars($priceMin, $priceMax);
+
             $discount = min($discount, $groupSummary->min_discount);
 
             //
             // other groups
             //
 
-            $getPriceFromOtherGroups = $price == 0;
+            $getPriceFromAllGroups = $price === 0;
 
-            $otherGroups = unmap($groups, $selectedGroupId);
+            if ($getPriceFromAllGroups) {
+                $priceMin = PHP_INT_MAX;
+                $priceMax = 0;
+            }
 
             $groupsWithStockCount = 0;
 
             $stock = 0;
-            foreach ($otherGroups as $groupId => $group) {
+            foreach ($groups as $groupId => $group) {
                 $groupSummary = $summary[$groupId];
 
-                $groupStock = $groupSummary->stock - $groupSummary->reserved; //
+                if ($groupId != $selectedGroupId) {
+                    $groupStock = $groupSummary->stock - $groupSummary->reserved;
 
-                if ($getPriceFromOtherGroups) {
-                    $price = max($price, $groupSummary->max_price);
+                    $stock += $groupStock;
+
+                    if ($groupStock > 0) {
+                        $groupsWithStockCount++;
+
+                        $otherGroupName = $group->name;
+                    }
                 }
 
-                if ($groupStock > 0) {
-                    $groupsWithStockCount++;
-
-                    $otherGroupName = $group->name;
+                if ($getPriceFromAllGroups) {
+                    list($priceMin, $priceMax) = $this->precisePrice($priceMin, $priceMax, $groupSummary);
                 }
+            }
 
-                $stock += $groupStock;
+            if ($getPriceFromAllGroups) {
+                list($priceMin, $priceMax, $price, $priceIsRange) = $this->renderPriceVars($priceMin, $priceMax);
             }
 
             $totalStock += $stock;
 
             $stockRounded = $this->roundStock($stock);
-            $inStock = $stockRounded > $this->stockMinimumValue;
+            $inStock = $stockRounded > 0 && $stockRounded >= $this->stockMinimumValue;
 
             $this->inStockOnOthers = $inStock;
 
@@ -298,11 +341,11 @@ class Tile
 
             if ($grid->stockFilterEnabled) {
                 if ($grid->stockFilterMode == 'all') {
-                    $this->hiddenByStock = $totalStock <= $this->stockMinimumValue;
+                    $this->hiddenByStock = $totalStock <= 0 || $totalStock < $this->stockMinimumValue;
                 }
 
                 if ($grid->stockFilterMode == 'selected') {
-                    $this->hiddenByStock = $stockInSelectedRounded <= $this->stockMinimumValue;
+                    $this->hiddenByStock = $stockInSelectedRounded <= 0 || $stockInSelectedRounded < $this->stockMinimumValue;
                 }
             }
         } else {
@@ -315,18 +358,21 @@ class Tile
             foreach ($groups as $groupId => $group) {
                 $groupSummary = $summary[$groupId];
 
-                $groupStock = $groupSummary->stock - $groupSummary->reserved; //
+                $groupStock = $groupSummary->stock - $groupSummary->reserved;
 
                 $stock += $groupStock;
 
-                $price = max($price, $groupSummary->max_price);
+                list($priceMin, $priceMax) = $this->precisePrice($priceMin, $priceMax, $groupSummary);
+
                 $discount = min($discount, $groupSummary->min_discount);
             }
+
+            list($priceMin, $priceMax, $price, $priceIsRange) = $this->renderPriceVars($priceMin, $priceMax);
 
             $totalStock += $stock;
 
             $stockRounded = $this->roundStock($stock);
-            $inStock = $stockRounded > $this->stockMinimumValue;
+            $inStock = $stockRounded > 0 && $stockRounded >= $this->stockMinimumValue;
 
             $this->inStock = $inStock;
 
@@ -352,20 +398,61 @@ class Tile
             //
 
             if ($grid->stockFilterEnabled) {
-                $this->hiddenByStock = $totalStock <= $this->stockMinimumValue;
+                $this->hiddenByStock = $totalStock <= 0 || $totalStock < $this->stockMinimumValue;
             }
         }
 
-        if ($discount == PHP_INT_MAX) {
+        //
+        //
+        //
+
+        if ($discount == PHP_INT_MAX || $priceIsRange) {
             $discount = 0;
         }
 
         $this->price = $price;
+        $this->priceMin = $priceMin;
+        $this->priceMax = $priceMax;
+        $this->priceIsRange = $priceIsRange;
+
         $this->discount = $discount;
 
-        if ($this->price == 0 && $grid->notZeropriceFilterEnabled) {
+        if (!$priceIsRange && $price == 0 && $grid->notZeropriceFilterEnabled) {
             $this->hiddenByZeroprice = true;
         }
+    }
+
+    private function precisePrice($min, $max, $groupSummary)
+    {
+        if ($groupSummary->not_suppliers_min_price > 0) {
+            $min = min($min, $groupSummary->not_suppliers_min_price);
+        }
+
+        $max = max($max, $groupSummary->not_suppliers_max_price);
+
+        return [$min, $max];
+    }
+
+    private function renderPriceVars($min, $max)
+    {
+        if ($min == PHP_INT_MAX) {
+            $min = 0;
+        }
+
+        if ($min == $max) {
+            $price = $min;
+            $isRange = false;
+        } else {
+            if ($min > 0) {
+                $price = false;
+                $isRange = true;
+            } else {
+                $price = $max;
+                $isRange = false;
+            }
+        }
+
+        return [$min, $max, $price, $isRange];
     }
 
     private function roundStock($stock)
@@ -394,27 +481,49 @@ class Tile
         if ($this->data('price/rounding/enabled')) {
             $roundingMode = $this->data('price/rounding/mode');
 
-            if ($roundingMode == 'floor') {
-                $this->price = floor($this->price);
-                $this->priceWithoutDiscount = floor($this->priceWithoutDiscount);
-            }
+            if ($this->priceIsRange) {
+                if ($roundingMode == 'floor') {
+                    $this->priceMin = floor($this->priceMin);
+                    $this->priceMax = floor($this->priceMax);
+                }
 
-            if ($roundingMode == 'round') {
-                $this->price = round($this->price);
-                $this->priceWithoutDiscount = round($this->priceWithoutDiscount);
-            }
+                if ($roundingMode == 'round') {
+                    $this->priceMin = round($this->priceMin);
+                    $this->priceMax = round($this->priceMax);
+                }
 
-            if ($roundingMode == 'ceil') {
-                $this->price = ceil($this->price);
-                $this->priceWithoutDiscount = ceil($this->priceWithoutDiscount);
+                if ($roundingMode == 'ceil') {
+                    $this->priceMin = ceil($this->priceMin);
+                    $this->priceMax = ceil($this->priceMax);
+                }
+            } else {
+                if ($roundingMode == 'floor') {
+                    $this->price = floor($this->price);
+                    $this->priceWithoutDiscount = floor($this->priceWithoutDiscount);
+                }
+
+                if ($roundingMode == 'round') {
+                    $this->price = round($this->price);
+                    $this->priceWithoutDiscount = round($this->priceWithoutDiscount);
+                }
+
+                if ($roundingMode == 'ceil') {
+                    $this->price = ceil($this->price);
+                    $this->priceWithoutDiscount = ceil($this->priceWithoutDiscount);
+                }
             }
         }
     }
 
     private function formatPrices()
     {
-        $this->priceFormatted = $this->formatPrice($this->price);
-        $this->priceWithoutDiscountFormatted = $this->formatPrice($this->priceWithoutDiscount);
+        if ($this->priceIsRange) {
+            $this->priceMinFormatted = $this->formatPrice($this->priceMin);
+            $this->priceMaxFormatted = $this->formatPrice($this->priceMax);
+        } else {
+            $this->priceFormatted = $this->formatPrice($this->price);
+            $this->priceWithoutDiscountFormatted = $this->formatPrice($this->priceWithoutDiscount);
+        }
     }
 
     private function formatPrice($price)
@@ -426,10 +535,12 @@ class Tile
 
     private function renderDiscount()
     {
-        if ($this->discount > 0 && $this->data('price/discount/display') && $this->price > 0 && $this->inStock) {
-            $this->discountApplied = true;
-            $this->priceWithoutDiscount = $this->price;
-            $this->price -= $this->price * $this->discount / 100;
+        if (!$this->priceIsRange) {
+            if ($this->discount > 0 && $this->data('price/discount/display') && $this->price > 0 && $this->inStock) {
+                $this->discountApplied = true;
+                $this->priceWithoutDiscount = $this->price;
+                $this->price -= $this->price * $this->discount / 100;
+            }
         }
     }
 
@@ -440,7 +551,13 @@ class Tile
         $this->units = $product->units;
 
         if ($this->areAltUnitsUsed()) {
-            $this->price *= $product->unit_size;
+            if ($this->priceIsRange) {
+                $this->priceMin *= $product->unit_size;
+                $this->priceMax *= $product->unit_size;
+            } else {
+                $this->price *= $product->unit_size;
+            }
+
             $this->units = $product->alt_units;
         }
     }
@@ -493,65 +610,4 @@ class Tile
 
         return $name;
     }
-
-//    private function renderMultisourceData()
-//    {
-//        $product = $this->product;
-//        $grid = $this->grid;
-//
-//        if ($this->stockRoundingEnabled = $this->data('stock/rounding/enabled')) {
-//            $this->stockRoundingMode = $this->data('stock/rounding/mode');
-//        }
-//
-//        $groups = ss()->multisource->getWarehousesGroups();
-//
-//        $summary = $product->multisourceSummary2;
-//        $summaryByGroupId = table_rows_by($summary, 'warehouses_group_id');
-//
-//        $totalStock = 0;
-//
-//        $price = 0;
-//        $discount = PHP_INT_MAX;
-//
-//        $stockGroups = $this->data('stock/groups');
-//
-//        foreach ($groups as $groupId => $group) {
-//            $groupSummary = $summaryByGroupId[$groupId];
-//
-//            if ($groupData = $stockGroups[$groupId] ?? false) {
-//                if ($groupData['enabled']) {
-//                    $stock = $groupSummary->stock;
-//                    $totalStock += $stock;
-//
-//                    $stockRounded = $this->roundStock($stock);
-//
-//                    $inStock = $stockRounded > $grid->stockMinimumValue;
-//
-//                    $settingsIndex = $inStock ? 'in_stock' : 'not_in_stock';
-//
-//                    $this->stockGroupsInfo[] = [
-//                        'value'       => $stockRounded,
-//                        'in_stock'    => $inStock,
-//                        'mode'        => $groupData[$settingsIndex]['mode'],
-//                        'label'       => $groupData[$settingsIndex]['label'],
-//                        'value_label' => $groupData['value_label']
-//                    ];
-//                }
-//            }
-//
-//            $price = max($price, $groupSummary->max_price);
-//            $discount = min($discount, $groupSummary->min_price);
-//        }
-//
-//        if ($discount == PHP_INT_MAX) {
-//            $discount = 0;
-//        }
-//
-//        $this->price = $price;
-//        $this->discount = $discount;
-//
-//        if ($grid->stockFilterEnabled && $totalStock <= $grid->stockMinimumValue) {
-//            $this->hiddenByStock = true;
-//        }
-//    }
 }

@@ -21,6 +21,7 @@ class Tile extends \Controller
         if ($this->product && $this->pivot) {
             $this->instance_($this->product->id);
 
+            // todo запускать render() только при отключенном кэше
             $this->tile = \ss\components\products\tile($this->product, $this->pivot);
 
             $this->cacheEnabled = \ss\components\products\config('cache_enabled');
@@ -133,13 +134,19 @@ class Tile extends \Controller
         $tile = $this->tile;
 
         if ($tile->priceDisplay) {
-            if ($tile->price == 0 && $tile->zeropriceLabelEnabled) {
+            if (!$tile->priceIsRange && $tile->price == 0 && $tile->zeropriceLabelEnabled) {
                 $v->assign('zeroprice_label', [
                     'VALUE' => $tile->zeropriceLabelValue
                 ]);
             } else {
+                if ($tile->priceIsRange) {
+                    $priceContent = $tile->priceMinFormatted . ' — ' . $tile->priceMaxFormatted;
+                } else {
+                    $priceContent = $tile->priceFormatted;
+                }
+
                 $v->assign('price', [
-                    'VALUE' => $tile->priceFormatted,
+                    'VALUE' => $priceContent,
                 ]);
 
                 if ($tile->units) {
